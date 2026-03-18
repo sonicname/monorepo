@@ -1,8 +1,9 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @theme {
-  --font-sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif,
-    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-sans:
+    'Space Grotesk', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   --color-ink: #0f172a;
   --color-canvas: #f4efe6;
   --color-panel: #fff9f1;
@@ -18,8 +19,16 @@ body {
 
 body {
   background:
-    radial-gradient(circle at top left, rgba(217, 119, 6, 0.18), transparent 28%),
-    radial-gradient(circle at bottom right, rgba(154, 52, 18, 0.16), transparent 24%),
+    radial-gradient(
+      circle at top left,
+      rgba(217, 119, 6, 0.18),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at bottom right,
+      rgba(154, 52, 18, 0.16),
+      transparent 24%
+    ),
     linear-gradient(180deg, var(--color-canvas) 0%, #efe7dc 100%);
   color: var(--color-ink);
 }
@@ -57,13 +66,17 @@ a {
 }
 
 .hero-card::after {
-  content: "";
+  content: '';
   position: absolute;
   inset: auto -3rem -3rem auto;
   width: 12rem;
   height: 12rem;
   border-radius: 999px;
-  background: linear-gradient(135deg, rgba(217, 119, 6, 0.2), rgba(154, 52, 18, 0.28));
+  background: linear-gradient(
+    135deg,
+    rgba(217, 119, 6, 0.2),
+    rgba(154, 52, 18, 0.28)
+  );
 }
 
 .eyebrow {
@@ -132,7 +145,7 @@ a {
 }
 
 .status-pill::before {
-  content: "";
+  content: '';
   width: 0.65rem;
   height: 0.65rem;
   border-radius: 999px;

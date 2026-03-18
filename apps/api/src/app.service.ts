@@ -1,8 +1,9 @@
+import type { ApiHealth } from '@monorepo/contracts';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class AppService {
-  getHealth() {
+  getHealth(): ApiHealth {
     return {
       name: 'api',
       status: 'ok',

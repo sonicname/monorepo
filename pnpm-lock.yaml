@@ -14,6 +14,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@monorepo/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       '@nestjs/common':
         specifier: ^11.0.1
         version: 11.1.17(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -102,6 +105,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@monorepo/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
       '@react-router/node':
         specifier: 7.12.0
         version: 7.12.0(react-router@7.12.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(typescript@5.9.3)
@@ -148,6 +154,8 @@ importers:
       vite-tsconfig-paths:
         specifier: ^5.1.4
         version: 5.1.4(typescript@5.9.3)(vite@7.3.1(@types/node@22.19.15)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.1))
+
+  packages/contracts: {}
 
 packages:
 

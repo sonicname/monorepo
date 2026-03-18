@@ -4,6 +4,7 @@ PNPM workspace with two Node.js applications:
 
 - `apps/web`: React Router v7 framework app with server-side rendering
 - `apps/api`: NestJS API server
+- `packages/contracts`: shared TypeScript contracts consumed by both apps
 
 ## Requirements
 
@@ -33,6 +34,7 @@ The SSR home route calls the Nest API health endpoint during its loader.
 
 - Health endpoint: <http://localhost:3001/health>
 - Optional server-side override: set `API_URL` before starting the web app
+- Shared response type: `ApiHealth` from `@monorepo/contracts`
 
 Example:
 
