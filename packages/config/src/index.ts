@@ -1,4 +1,7 @@
-export type RuntimeEnv = Record<string, string | undefined>;
+import { z } from 'zod';
+
+export type RuntimeEnv = Record<string, unknown>;
+type RuntimeEnvInput = Record<string, unknown>;
 
 const DEFAULT_PROTOCOL = 'http';
 const DEFAULT_HOST = '127.0.0.1';
@@ -12,10 +15,104 @@ const HEALTH_PATH = '/health';
 const PROJECTS_PATH = '/projects';
 const QUEUE_STATUS_PATH = '/queue';
 
-function parsePort(value: string | undefined, fallback: number) {
-  const parsed = Number(value);
+export const RUNTIME_ENV_KEYS = [
+  'NODE_ENV',
+  'PORT',
+  'API_PORT',
+  'WEB_PORT',
+  'API_URL',
+  'WEB_URL',
+  'PUBLIC_API_BASE_PATH',
+  'REDIS_URL',
+  'BULLMQ_ENABLED',
+  'BULLMQ_PREFIX',
+] as const;
 
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+const httpSchemes = ['http:', 'https:'];
+const redisSchemes = ['redis:', 'rediss:'];
+const validatedEnvCache = new WeakMap<object, ValidatedRuntimeEnv>();
+
+const positivePortSchema = z.preprocess(
+  (value) => (value === '' || value == null ? undefined : value),
+  z.coerce.number().int().positive(),
+);
+const httpUrlSchema = z
+  .string()
+  .url()
+  .refine(
+    (value) => httpSchemes.includes(new URL(value).protocol),
+    'Must be a valid HTTP or HTTPS URL',
+  );
+const redisUrlSchema = z
+  .string()
+  .url()
+  .refine(
+    (value) => redisSchemes.includes(new URL(value).protocol),
+    'Must be a valid Redis URL',
+  );
+const booleanFromEnvSchema = z.preprocess((value) => {
+  if (value === 'true') {
+    return true;
+  }
+
+  if (value === 'false') {
+    return false;
+  }
+
+  return value;
+}, z.boolean());
+
+export const runtimeEnvSchema = z
+  .object({
+    NODE_ENV: z.enum(['development', 'test', 'production']).optional(),
+    PORT: positivePortSchema.optional(),
+    API_PORT: positivePortSchema.optional(),
+    WEB_PORT: positivePortSchema.optional(),
+    API_URL: httpUrlSchema.optional(),
+    WEB_URL: httpUrlSchema.optional(),
+    PUBLIC_API_BASE_PATH: z
+      .string()
+      .startsWith('/', 'Must start with /')
+      .optional(),
+    REDIS_URL: redisUrlSchema.optional(),
+    BULLMQ_ENABLED: booleanFromEnvSchema.optional(),
+    BULLMQ_PREFIX: z.string().min(1).optional(),
+  })
+  .passthrough();
+
+export type ValidatedRuntimeEnv = z.infer<typeof runtimeEnvSchema>;
+
+function formatRuntimeEnvErrors(error: z.ZodError) {
+  return error.issues
+    .map(({ path, message }) => {
+      const key = path.length > 0 ? path.join('.') : 'root';
+      return `${key}: ${message}`;
+    })
+    .join('; ');
+}
+
+export function validateRuntimeEnv(env: RuntimeEnvInput) {
+  const result = runtimeEnvSchema.safeParse(env);
+
+  if (!result.success) {
+    throw new Error(
+      `Environment validation failed: ${formatRuntimeEnvErrors(result.error)}`,
+    );
+  }
+
+  return result.data;
+}
+
+export function getValidatedRuntimeEnv(env: RuntimeEnvInput) {
+  const cached = validatedEnvCache.get(env);
+
+  if (cached) {
+    return cached;
+  }
+
+  const validatedEnv = validateRuntimeEnv(env);
+  validatedEnvCache.set(env, validatedEnv);
+  return validatedEnv;
 }
 
 function trimTrailingSlash(value: string) {
@@ -31,45 +128,65 @@ function joinUrlParts(origin: string, path: string) {
 }
 
 export function getWebPort(env: RuntimeEnv) {
-  return parsePort(env.WEB_PORT, DEFAULT_WEB_PORT);
+  const validatedEnv = getValidatedRuntimeEnv(env);
+
+  return validatedEnv.WEB_PORT ?? DEFAULT_WEB_PORT;
 }
 
 export function getApiPort(env: RuntimeEnv) {
-  return parsePort(env.API_PORT ?? env.PORT, DEFAULT_API_PORT);
+  const validatedEnv = getValidatedRuntimeEnv(env);
+
+  return validatedEnv.API_PORT ?? validatedEnv.PORT ?? DEFAULT_API_PORT;
 }
 
 export function getWebOrigin(env: RuntimeEnv) {
+  const validatedEnv = getValidatedRuntimeEnv(env);
+
   return (
-    env.WEB_URL ?? `${DEFAULT_PROTOCOL}://${DEFAULT_HOST}:${getWebPort(env)}`
+    validatedEnv.WEB_URL ??
+    `${DEFAULT_PROTOCOL}://${DEFAULT_HOST}:${getWebPort(env)}`
   );
 }
 
 export function getApiOrigin(env: RuntimeEnv) {
+  const validatedEnv = getValidatedRuntimeEnv(env);
+
   return (
-    env.API_URL ?? `${DEFAULT_PROTOCOL}://${DEFAULT_HOST}:${getApiPort(env)}`
+    validatedEnv.API_URL ??
+    `${DEFAULT_PROTOCOL}://${DEFAULT_HOST}:${getApiPort(env)}`
   );
 }
 
 export function getPublicApiBasePath(env: RuntimeEnv) {
+  const validatedEnv = getValidatedRuntimeEnv(env);
+
   return ensureLeadingSlash(
-    env.PUBLIC_API_BASE_PATH ?? DEFAULT_PUBLIC_API_BASE_PATH,
+    validatedEnv.PUBLIC_API_BASE_PATH ?? DEFAULT_PUBLIC_API_BASE_PATH,
   );
 }
 
 export function getRedisUrl(env: RuntimeEnv) {
-  return env.REDIS_URL ?? DEFAULT_REDIS_URL;
+  const validatedEnv = getValidatedRuntimeEnv(env);
+
+  return validatedEnv.REDIS_URL ?? DEFAULT_REDIS_URL;
 }
 
 export function isBullMqEnabled(env: RuntimeEnv) {
-  return env.BULLMQ_ENABLED === 'true' || Boolean(env.REDIS_URL);
+  const validatedEnv = getValidatedRuntimeEnv(env);
+
+  return validatedEnv.BULLMQ_ENABLED ?? Boolean(env.REDIS_URL);
 }
 
 export function getBullMqPrefix(env: RuntimeEnv) {
-  return env.BULLMQ_PREFIX ?? DEFAULT_BULLMQ_PREFIX;
+  const validatedEnv = getValidatedRuntimeEnv(env);
+
+  return validatedEnv.BULLMQ_PREFIX ?? DEFAULT_BULLMQ_PREFIX;
 }
 
 export function getProjectsQueueName(env: RuntimeEnv) {
-  return env.BULLMQ_PROJECTS_QUEUE_NAME ?? DEFAULT_PROJECTS_QUEUE_NAME;
+  getValidatedRuntimeEnv(env);
+
+  return DEFAULT_PROJECTS_QUEUE_NAME;
 }
 
 export function maskConnectionUrl(value: string) {

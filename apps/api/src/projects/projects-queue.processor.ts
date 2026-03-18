@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/require-await */
-import { getProjectsQueueName } from '@monorepo/config';
 import {
   PROJECTS_QUEUE_EVENT_COMPLETED,
   PROJECTS_QUEUE_EVENT_ERROR,
   PROJECTS_QUEUE_EVENT_FAILED,
   PROJECTS_QUEUE_EVENT_READY,
+  PROJECTS_QUEUE_NAME,
   type ProjectsSyncJobResult,
 } from '@monorepo/constants';
 import type { ProjectsQueueJob } from '@monorepo/queue';
@@ -12,10 +12,8 @@ import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { ProjectsQueueService } from './projects-queue.service';
 
-const projectsQueueName = getProjectsQueueName(process.env);
-
 @Injectable()
-@Processor(projectsQueueName)
+@Processor(PROJECTS_QUEUE_NAME)
 export class ProjectsQueueProcessor extends WorkerHost {
   private readonly logger = new Logger(ProjectsQueueProcessor.name);
 
@@ -39,7 +37,7 @@ export class ProjectsQueueProcessor extends WorkerHost {
   @OnWorkerEvent(PROJECTS_QUEUE_EVENT_READY)
   onReady() {
     this.projectsQueueService.markReady();
-    this.logger.log(`BullMQ worker ready for queue ${projectsQueueName}.`);
+    this.logger.log(`BullMQ worker ready for queue ${PROJECTS_QUEUE_NAME}.`);
   }
 
   @OnWorkerEvent(PROJECTS_QUEUE_EVENT_COMPLETED)

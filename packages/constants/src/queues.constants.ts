@@ -1,3 +1,4 @@
+export const PROJECTS_QUEUE_NAME = 'projects';
 export const PROJECTS_SYNC_JOB_NAME = 'projects.sync';
 
 export type ProjectsSyncJobData = {

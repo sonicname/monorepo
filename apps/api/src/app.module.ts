@@ -1,32 +1,37 @@
-import { getBullMqPrefix, isBullMqEnabled } from '@monorepo/config';
-import { getBullMqConnection } from '@monorepo/queue';
+import { validateRuntimeEnv } from '@monorepo/config';
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { validateAppEnv } from './config/env.validation';
+import { RuntimeConfigModule } from './config/runtime-config.module';
+import { RuntimeConfigService } from './config/runtime-config.service';
 import { ProjectsModule } from './projects/projects.module';
 
-const bullMqEnabled = isBullMqEnabled(process.env);
-
-const bullMqImports = bullMqEnabled
-  ? [
-      BullModule.forRoot({
-        connection: getBullMqConnection(process.env),
-        prefix: getBullMqPrefix(process.env),
-      }),
-    ]
-  : [];
+const validateConfig = validateRuntimeEnv as unknown as (
+  config: Record<string, unknown>,
+) => Record<string, unknown>;
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       cache: true,
       isGlobal: true,
-      validate: validateAppEnv,
+      validate: validateConfig,
     }),
-    ...bullMqImports,
+    RuntimeConfigModule,
+    BullModule.forRootAsync({
+      inject: [RuntimeConfigService],
+      useFactory: (runtimeConfigService: RuntimeConfigService) => {
+        return {
+          connection: runtimeConfigService.getBullMqConnection(),
+          prefix: runtimeConfigService.getBullMqPrefix(),
+          extraOptions: {
+            manualRegistration: !runtimeConfigService.isBullMqEnabled(),
+          },
+        };
+      },
+    }) as never,
     ProjectsModule,
   ],
   controllers: [AppController],

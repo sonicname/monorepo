@@ -6,17 +6,21 @@
     "concurrently": "^9.2.1"
   },
   "scripts": {
-    "dev": "concurrently -n web,api -c blue,green \"pnpm --filter web dev\" \"pnpm --filter api dev\"",
-    "dev:web": "pnpm --filter web dev",
-    "dev:api": "pnpm --filter api dev",
-    "build": "pnpm --filter web build && pnpm --filter api build",
+    "postinstall": "pnpm run build:packages",
+    "build:packages": "pnpm --filter @monorepo/config build && pnpm --filter @monorepo/constants build && pnpm --filter @monorepo/contracts build && pnpm --filter @monorepo/queue build",
+    "watch:packages": "concurrently -n config,constants,contracts,queue -c yellow,magenta,cyan,white \"pnpm --filter @monorepo/config watch\" \"pnpm --filter @monorepo/constants watch\" \"pnpm --filter @monorepo/contracts watch\" \"pnpm --filter @monorepo/queue watch\"",
+    "dev": "pnpm run build:packages && concurrently -n packages,web,api -c yellow,blue,green \"pnpm run watch:packages\" \"pnpm --filter web dev\" \"pnpm --filter api dev\"",
+    "dev:web": "pnpm run build:packages && pnpm --filter web dev",
+    "dev:api": "pnpm run build:packages && pnpm --filter api dev",
+    "build": "pnpm run build:packages && pnpm --filter web build && pnpm --filter api build",
+    "clean": "rm -rf apps/web/build apps/web/.react-router apps/api/dist packages/config/dist packages/constants/dist packages/contracts/dist packages/queue/dist",
     "start": "concurrently -n web,api -c blue,green \"pnpm --filter web start\" \"pnpm --filter api start:prod\"",
     "start:web": "pnpm --filter web start",
     "start:api": "pnpm --filter api start:prod",
     "lint": "pnpm --filter api lint",
     "test": "pnpm --filter api test",
     "test:e2e": "pnpm --filter api test:e2e",
-    "typecheck": "pnpm --filter @monorepo/config typecheck && pnpm --filter @monorepo/constants typecheck && pnpm --filter @monorepo/contracts typecheck && pnpm --filter @monorepo/queue typecheck && pnpm --filter web typecheck && pnpm --filter api typecheck",
+    "typecheck": "pnpm run build:packages && pnpm --filter @monorepo/config typecheck && pnpm --filter @monorepo/constants typecheck && pnpm --filter @monorepo/contracts typecheck && pnpm --filter @monorepo/queue typecheck && pnpm --filter web typecheck && pnpm --filter api typecheck",
     "format": "pnpm --filter api format"
   }
 }

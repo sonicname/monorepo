@@ -29,12 +29,11 @@ services:
       BULLMQ_ENABLED: 'true'
       REDIS_URL: redis://redis:6379
       BULLMQ_PREFIX: monorepo
-      BULLMQ_PROJECTS_QUEUE_NAME: projects
       CHOKIDAR_USEPOLLING: 'true'
     command:
       - sh
       - -lc
-      - corepack enable && pnpm install && pnpm --filter api dev
+      - corepack enable && pnpm install && pnpm run build:packages && pnpm --filter api dev
     ports:
       - '3001:3001'
     volumes:
@@ -58,12 +57,11 @@ services:
       BULLMQ_ENABLED: 'true'
       REDIS_URL: redis://redis:6379
       BULLMQ_PREFIX: monorepo
-      BULLMQ_PROJECTS_QUEUE_NAME: projects
       CHOKIDAR_USEPOLLING: 'true'
     command:
       - sh
       - -lc
-      - corepack enable && pnpm install && pnpm --filter web dev --host 0.0.0.0
+      - corepack enable && pnpm install && pnpm run build:packages && pnpm --filter web dev --host 0.0.0.0
     ports:
       - '5173:5173'
     volumes:

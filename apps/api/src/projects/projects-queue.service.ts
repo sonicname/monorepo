@@ -1,24 +1,24 @@
-import {
-  getBullMqPrefix,
-  getProjectsQueueName,
-  getRedisUrl,
-  isBullMqEnabled,
-  maskConnectionUrl,
-} from '@monorepo/config';
 import type { ProjectsQueueStatus } from '@monorepo/constants';
 import { Injectable } from '@nestjs/common';
+import { RuntimeConfigService } from '../config/runtime-config.service';
 
 @Injectable()
 export class ProjectsQueueService {
-  private readonly status: ProjectsQueueStatus = {
-    enabled: isBullMqEnabled(process.env),
-    queueName: getProjectsQueueName(process.env),
-    prefix: getBullMqPrefix(process.env),
-    redisUrl: maskConnectionUrl(getRedisUrl(process.env)),
-    workerStatus: isBullMqEnabled(process.env) ? 'starting' : 'disabled',
-    lastJobId: null,
-    lastProcessedAt: null,
-  };
+  private readonly status: ProjectsQueueStatus;
+
+  constructor(runtimeConfigService: RuntimeConfigService) {
+    const enabled = runtimeConfigService.isBullMqEnabled();
+
+    this.status = {
+      enabled,
+      queueName: runtimeConfigService.getProjectsQueueName(),
+      prefix: runtimeConfigService.getBullMqPrefix(),
+      redisUrl: runtimeConfigService.getMaskedBullMqConnectionUrl(),
+      workerStatus: enabled ? 'starting' : 'disabled',
+      lastJobId: null,
+      lastProcessedAt: null,
+    };
+  }
 
   getStatus(): ProjectsQueueStatus {
     return this.status;

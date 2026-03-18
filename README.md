@@ -20,6 +20,8 @@ PNPM workspace with two Node.js applications:
 pnpm install
 ```
 
+The shared workspace packages build to `dist/` and root install runs that build automatically.
+
 Example environment files are provided in:
 
 - `apps/web/.env.example`
@@ -32,6 +34,8 @@ Run both apps together:
 ```bash
 pnpm dev
 ```
+
+This builds the shared workspace packages first, then watches them while the apps run.
 
 Run the full dev stack with Docker Compose:
 
@@ -62,7 +66,7 @@ The SSR home route calls the Nest API health endpoint during its loader.
 - Projects endpoint: <http://localhost:3001/api/projects>
 - Queue status endpoint: <http://localhost:3001/api/projects/queue>
 - Optional server-side override: set `API_URL` before starting the web app
-- Optional shared env values: `WEB_PORT`, `API_PORT`, `WEB_URL`, `API_URL`, `PUBLIC_API_BASE_PATH`, `REDIS_URL`, `BULLMQ_ENABLED`, `BULLMQ_PREFIX`, `BULLMQ_PROJECTS_QUEUE_NAME`
+- Optional shared env values: `WEB_PORT`, `API_PORT`, `WEB_URL`, `API_URL`, `PUBLIC_API_BASE_PATH`, `REDIS_URL`, `BULLMQ_ENABLED`, `BULLMQ_PREFIX`
 - Shared response type: `ApiHealth` from `@monorepo/contracts`
 
 Example:
@@ -97,6 +101,12 @@ Build both apps:
 
 ```bash
 pnpm build
+```
+
+If you only need the shared workspace packages rebuilt, run:
+
+```bash
+pnpm run build:packages
 ```
 
 Start both production servers:
