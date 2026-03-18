@@ -1,8 +1,18 @@
-import type { ApiHealth, ProjectSummary, ProjectsResponse } from '@monorepo/contracts';
+import {
+  getApiOrigin,
+  getHealthUrl,
+  getProjectsUrl,
+  getPublicApiBasePath,
+} from '@monorepo/config';
+import type {
+  ApiHealth,
+  ProjectSummary,
+  ProjectsResponse,
+} from '@monorepo/contracts';
 import type { Route } from './+types/home';
 
 function getApiBaseUrl() {
-  return process.env.API_URL ?? 'http://127.0.0.1:3001';
+  return getApiOrigin(process.env);
 }
 
 async function fetchApiJson<T>(input: string): Promise<T> {
@@ -33,23 +43,35 @@ function getStatusTone(status: ProjectSummary['status']) {
 
 export async function loader() {
   const apiBaseUrl = getApiBaseUrl();
+  const publicApiBasePath = getPublicApiBasePath(process.env);
   const checkedAt = new Date().toISOString();
+  const healthUrl = getHealthUrl(process.env);
+  const projectsUrl = getProjectsUrl(process.env);
 
   const [healthResult, projectsResult] = await Promise.allSettled([
-    fetchApiJson<ApiHealth>(`${apiBaseUrl}/health`),
-    fetchApiJson<ProjectsResponse>(`${apiBaseUrl}/api/projects`),
+    fetchApiJson<ApiHealth>(healthUrl),
+    fetchApiJson<ProjectsResponse>(projectsUrl),
   ]);
 
-  const health = healthResult.status === 'fulfilled' ? healthResult.value : null;
-  const projects = projectsResult.status === 'fulfilled' ? projectsResult.value : null;
+  const health =
+    healthResult.status === 'fulfilled' ? healthResult.value : null;
+  const projects =
+    projectsResult.status === 'fulfilled' ? projectsResult.value : null;
   const isHealthy = healthResult.status === 'fulfilled';
   const errorMessage = [healthResult, projectsResult]
     .filter((result) => result.status === 'rejected')
-    .map((result) => (result.reason instanceof Error ? result.reason.message : 'Unknown API error'))
+    .map((result) =>
+      result.reason instanceof Error
+        ? result.reason.message
+        : 'Unknown API error',
+    )
     .join(' | ');
 
   return {
     apiBaseUrl,
+    publicApiBasePath,
+    healthUrl,
+    projectsUrl,
     health,
     projects,
     isHealthy,
@@ -76,7 +98,8 @@ export default function Home({ loaderData }: Route.ComponentProps) {
     : 'API unavailable';
   const timestamp = loaderData.health?.timestamp ?? loaderData.checkedAt;
   const projectCount = loaderData.projects?.items.length ?? 0;
-  const projectsTimestamp = loaderData.projects?.generatedAt ?? loaderData.checkedAt;
+  const projectsTimestamp =
+    loaderData.projects?.generatedAt ?? loaderData.checkedAt;
 
   return (
     <main className='status-shell'>
@@ -110,7 +133,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                 <div className='detail-item'>
                   <span className='detail-key'>Shared package</span>
                   <span className='detail-value'>
-                    @monorepo/contracts provides typed API response contracts
+                    @monorepo/config centralizes ports, origins, and public API paths
                   </span>
                 </div>
               </div>
@@ -129,7 +152,9 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                 <div className='detail-item'>
                   <span className='detail-key'>Projects loaded</span>
                   <span className='detail-value'>
-                    {projectCount > 0 ? `${projectCount} items from /api/projects` : loaderData.error}
+                    {projectCount > 0
+                      ? `${projectCount} items from /api/projects`
+                      : loaderData.error}
                   </span>
                 </div>
               </div>
@@ -147,13 +172,17 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             <div className='detail-item'>
               <span className='detail-key'>Health endpoint</span>
               <span className='detail-value'>
-                {loaderData.apiBaseUrl}/health
+                {loaderData.healthUrl}
               </span>
+            </div>
+            <div className='detail-item'>
+              <span className='detail-key'>Public API base path</span>
+              <span className='detail-value'>{loaderData.publicApiBasePath}</span>
             </div>
             <div className='detail-item'>
               <span className='detail-key'>Projects endpoint</span>
               <span className='detail-value'>
-                {loaderData.apiBaseUrl}/api/projects
+                {loaderData.projectsUrl}
               </span>
             </div>
             <div className='detail-item'>
@@ -179,11 +208,11 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           <div className='endpoint-list'>
             <div className='endpoint-chip'>
               <span className='endpoint-method'>GET</span>
-              <span>{loaderData.apiBaseUrl}/health</span>
+              <span>{loaderData.healthUrl}</span>
             </div>
             <div className='endpoint-chip'>
               <span className='endpoint-method'>GET</span>
-              <span>{loaderData.apiBaseUrl}/api/projects</span>
+              <span>{loaderData.projectsUrl}</span>
             </div>
             <div className='endpoint-chip'>
               <span className='endpoint-method'>DEV</span>
@@ -201,7 +230,9 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         <div className='projects-header'>
           <div>
             <p className='status-label'>Project feed</p>
-            <h2 className='projects-title'>Typed data from Nest rendered in the SSR route.</h2>
+            <h2 className='projects-title'>
+              Typed data from Nest rendered in the SSR route.
+            </h2>
           </div>
           <p className='projects-subtitle'>
             This list comes from the shared `ProjectsResponse` contract and the
@@ -213,7 +244,9 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           {loaderData.projects?.items.map((project) => (
             <article className='project-card' key={project.id}>
               <div className='project-meta'>
-                <span className={`project-status ${getStatusTone(project.status)}`}>
+                <span
+                  className={`project-status ${getStatusTone(project.status)}`}
+                >
                   {project.status.replace('-', ' ')}
                 </span>
                 <span className='project-updated'>

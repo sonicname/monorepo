@@ -9,6 +9,7 @@
     "typecheck": "react-router typegen && tsc"
   },
   "dependencies": {
+    "@monorepo/config": "workspace:*",
     "@monorepo/contracts": "workspace:*",
     "@react-router/node": "7.12.0",
     "@react-router/serve": "7.12.0",

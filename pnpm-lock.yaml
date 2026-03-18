@@ -14,6 +14,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@monorepo/config':
+        specifier: workspace:*
+        version: link:../../packages/config
       '@monorepo/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
@@ -105,6 +108,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@monorepo/config':
+        specifier: workspace:*
+        version: link:../../packages/config
       '@monorepo/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
@@ -154,6 +160,12 @@ importers:
       vite-tsconfig-paths:
         specifier: ^5.1.4
         version: 5.1.4(typescript@5.9.3)(vite@7.3.1(@types/node@22.19.15)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.46.1))
+
+  packages/config:
+    devDependencies:
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.3
 
   packages/contracts:
     devDependencies:

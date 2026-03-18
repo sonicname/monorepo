@@ -16,7 +16,7 @@
     "lint": "pnpm --filter api lint",
     "test": "pnpm --filter api test",
     "test:e2e": "pnpm --filter api test:e2e",
-    "typecheck": "pnpm --filter @monorepo/contracts typecheck && pnpm --filter web typecheck && pnpm --filter api typecheck",
+    "typecheck": "pnpm --filter @monorepo/config typecheck && pnpm --filter @monorepo/contracts typecheck && pnpm --filter web typecheck && pnpm --filter api typecheck",
     "format": "pnpm --filter api format"
   }
 }
