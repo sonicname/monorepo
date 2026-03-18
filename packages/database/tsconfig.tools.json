@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "rootDir": ".",
+    "outDir": ".tsbuild/tools",
+    "types": ["node"]
+  },
+  "include": ["*.config.ts"],
+  "exclude": ["dist", ".tsbuild"]
+}

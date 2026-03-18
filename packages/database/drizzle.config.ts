@@ -1,5 +1,4 @@
 /// <reference types="node" />
-
 import { defineConfig } from 'drizzle-kit';
 
 const databaseUrl =
