@@ -1,14 +1,19 @@
 import {
   getApiOrigin,
   getHealthUrl,
+  getProjectsQueueStatusUrl,
   getProjectsUrl,
   getPublicApiBasePath,
+  isBullMqEnabled,
 } from '@monorepo/config';
+import type { ProjectsQueueStatus } from '@monorepo/constants';
 import type {
   ApiHealth,
   ProjectSummary,
   ProjectsResponse,
 } from '@monorepo/contracts';
+import { enqueueProjectsSync } from '@monorepo/queue';
+import { Form, useActionData, useNavigation } from 'react-router';
 import type { Route } from './+types/home';
 
 function getApiBaseUrl() {
@@ -47,18 +52,23 @@ export async function loader() {
   const checkedAt = new Date().toISOString();
   const healthUrl = getHealthUrl(process.env);
   const projectsUrl = getProjectsUrl(process.env);
+  const queueStatusUrl = getProjectsQueueStatusUrl(process.env);
 
-  const [healthResult, projectsResult] = await Promise.allSettled([
-    fetchApiJson<ApiHealth>(healthUrl),
-    fetchApiJson<ProjectsResponse>(projectsUrl),
-  ]);
+  const [healthResult, projectsResult, queueStatusResult] =
+    await Promise.allSettled([
+      fetchApiJson<ApiHealth>(healthUrl),
+      fetchApiJson<ProjectsResponse>(projectsUrl),
+      fetchApiJson<ProjectsQueueStatus>(queueStatusUrl),
+    ]);
 
   const health =
     healthResult.status === 'fulfilled' ? healthResult.value : null;
   const projects =
     projectsResult.status === 'fulfilled' ? projectsResult.value : null;
+  const queueStatus =
+    queueStatusResult.status === 'fulfilled' ? queueStatusResult.value : null;
   const isHealthy = healthResult.status === 'fulfilled';
-  const errorMessage = [healthResult, projectsResult]
+  const errorMessage = [healthResult, projectsResult, queueStatusResult]
     .filter((result) => result.status === 'rejected')
     .map((result) =>
       result.reason instanceof Error
@@ -72,12 +82,48 @@ export async function loader() {
     publicApiBasePath,
     healthUrl,
     projectsUrl,
+    queueStatusUrl,
     health,
     projects,
+    queueStatus,
     isHealthy,
     checkedAt,
     error: errorMessage || null,
   };
+}
+
+export async function action() {
+  if (!isBullMqEnabled(process.env)) {
+    return {
+      ok: false,
+      message:
+        'BullMQ is disabled. Set REDIS_URL or BULLMQ_ENABLED=true to enable it.',
+      jobId: null,
+    };
+  }
+
+  try {
+    const job = await enqueueProjectsSync(process.env, {
+      source: 'web',
+      trigger: 'manual',
+      requestedAt: new Date().toISOString(),
+    });
+
+    return {
+      ok: true,
+      message: `Queued projects sync job ${job.id}.`,
+      jobId: job.id ? String(job.id) : null,
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : 'Unable to enqueue a BullMQ job.',
+      jobId: null,
+    };
+  }
 }
 
 export function meta({}: Route.MetaArgs) {
@@ -92,14 +138,22 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
+  const actionData = useActionData<typeof action>();
+  const navigation = useNavigation();
   const statusClass = loaderData.isHealthy ? 'is-ok' : 'is-error';
   const statusLabel = loaderData.isHealthy
     ? 'API reachable'
     : 'API unavailable';
+  const queueStatusClass = loaderData.queueStatus?.enabled
+    ? loaderData.queueStatus.workerStatus === 'error'
+      ? 'is-error'
+      : 'is-ok'
+    : 'is-neutral';
   const timestamp = loaderData.health?.timestamp ?? loaderData.checkedAt;
   const projectCount = loaderData.projects?.items.length ?? 0;
   const projectsTimestamp =
     loaderData.projects?.generatedAt ?? loaderData.checkedAt;
+  const isQueueSubmitting = navigation.state === 'submitting';
 
   return (
     <main className='status-shell'>
@@ -158,6 +212,14 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                       : loaderData.error}
                   </span>
                 </div>
+                <div className='detail-item'>
+                  <span className='detail-key'>BullMQ worker</span>
+                  <span className='detail-value'>
+                    {loaderData.queueStatus
+                      ? `${loaderData.queueStatus.workerStatus} on ${loaderData.queueStatus.queueName}`
+                      : 'Queue status unavailable'}
+                  </span>
+                </div>
               </div>
             </article>
           </div>
@@ -185,6 +247,10 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               <span className='detail-value'>{loaderData.projectsUrl}</span>
             </div>
             <div className='detail-item'>
+              <span className='detail-key'>Queue status endpoint</span>
+              <span className='detail-value'>{loaderData.queueStatusUrl}</span>
+            </div>
+            <div className='detail-item'>
               <span className='detail-key'>Response status</span>
               <span className='detail-value'>
                 {loaderData.health?.status ?? 'error'}
@@ -202,6 +268,12 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                 {new Date(projectsTimestamp).toLocaleString()}
               </span>
             </div>
+            <div className='detail-item'>
+              <span className='detail-key'>Redis</span>
+              <span className='detail-value'>
+                {loaderData.queueStatus?.redisUrl ?? 'BullMQ disabled'}
+              </span>
+            </div>
           </div>
 
           <div className='endpoint-list'>
@@ -214,6 +286,10 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               <span>{loaderData.projectsUrl}</span>
             </div>
             <div className='endpoint-chip'>
+              <span className='endpoint-method'>GET</span>
+              <span>{loaderData.queueStatusUrl}</span>
+            </div>
+            <div className='endpoint-chip'>
               <span className='endpoint-method'>DEV</span>
               <span>pnpm dev</span>
             </div>
@@ -221,6 +297,30 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               <span className='endpoint-method'>BUILD</span>
               <span>pnpm build</span>
             </div>
+          </div>
+
+          <div className='queue-panel'>
+            <div className={`status-pill ${queueStatusClass}`}>
+              {loaderData.queueStatus?.enabled
+                ? `BullMQ ${loaderData.queueStatus.workerStatus}`
+                : 'BullMQ disabled'}
+            </div>
+            <Form method='post' className='queue-form'>
+              <button
+                className='queue-button'
+                type='submit'
+                disabled={isQueueSubmitting}
+              >
+                {isQueueSubmitting ? 'Queueing job...' : 'Queue projects sync'}
+              </button>
+            </Form>
+            {actionData && (
+              <p
+                className={`queue-message ${actionData.ok ? 'is-success' : 'is-error'}`}
+              >
+                {actionData.message}
+              </p>
+            )}
           </div>
         </div>
       </section>
