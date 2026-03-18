@@ -33,6 +33,24 @@ Run both apps together:
 pnpm dev
 ```
 
+Run the full dev stack with Docker Compose:
+
+```bash
+docker compose -f docker-compose.dev.yml up --build
+```
+
+This starts:
+
+- `web` on <http://localhost:5173>
+- `api` on <http://localhost:3001>
+- `redis` on <http://localhost:6379>
+
+Stop the stack with:
+
+```bash
+docker compose -f docker-compose.dev.yml down
+```
+
 App URLs:
 
 - Web: <http://localhost:5173>
