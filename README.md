@@ -29,6 +29,17 @@ App URLs:
 - Web: <http://localhost:5173>
 - API: <http://localhost:3001>
 
+The SSR home route calls the Nest API health endpoint during its loader.
+
+- Health endpoint: <http://localhost:3001/health>
+- Optional server-side override: set `API_URL` before starting the web app
+
+Example:
+
+```bash
+API_URL=http://127.0.0.1:3001 pnpm dev:web
+```
+
 Run one app at a time:
 
 ```bash
