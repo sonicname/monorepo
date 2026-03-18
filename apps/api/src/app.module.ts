@@ -8,6 +8,7 @@ import { RuntimeConfigModule } from './config/runtime-config.module';
 import { RuntimeConfigService } from './config/runtime-config.service';
 import { DatabaseModule } from './database/database.module';
 import { ProjectsModule } from './projects/projects.module';
+import { RabbitMqModule } from './rabbitmq/rabbitmq.module';
 
 const validateConfig = validateRuntimeEnv as unknown as (
   config: Record<string, unknown>,
@@ -22,6 +23,7 @@ const validateConfig = validateRuntimeEnv as unknown as (
     }),
     RuntimeConfigModule,
     DatabaseModule,
+    RabbitMqModule,
     BullModule.forRootAsync({
       inject: [RuntimeConfigService],
       useFactory: (runtimeConfigService: RuntimeConfigService) => {

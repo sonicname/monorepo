@@ -11,6 +11,7 @@ const DEFAULT_PUBLIC_API_BASE_PATH = '/api';
 const DEFAULT_DATABASE_URL =
   'postgresql://postgres:postgres@127.0.0.1:5432/monorepo';
 const DEFAULT_REDIS_URL = 'redis://127.0.0.1:6379';
+const DEFAULT_RABBITMQ_URL = 'amqp://guest:guest@127.0.0.1:5672';
 const DEFAULT_BULLMQ_PREFIX = 'monorepo';
 const DEFAULT_PROJECTS_QUEUE_NAME = 'projects';
 const HEALTH_PATH = '/health';
@@ -27,13 +28,16 @@ export const RUNTIME_ENV_KEYS = [
   'PUBLIC_API_BASE_PATH',
   'DATABASE_URL',
   'REDIS_URL',
+  'RABBITMQ_URL',
   'BULLMQ_ENABLED',
+  'RABBITMQ_ENABLED',
   'BULLMQ_PREFIX',
 ] as const;
 
 const httpSchemes = ['http:', 'https:'];
 const databaseSchemes = ['postgres:', 'postgresql:'];
 const redisSchemes = ['redis:', 'rediss:'];
+const rabbitMqSchemes = ['amqp:', 'amqps:'];
 const validatedEnvCache = new WeakMap<object, ValidatedRuntimeEnv>();
 
 const positivePortSchema = z.preprocess(
@@ -53,6 +57,13 @@ const redisUrlSchema = z
   .refine(
     (value) => redisSchemes.includes(new URL(value).protocol),
     'Must be a valid Redis URL',
+  );
+const rabbitMqUrlSchema = z
+  .string()
+  .url()
+  .refine(
+    (value) => rabbitMqSchemes.includes(new URL(value).protocol),
+    'Must be a valid AMQP URL',
   );
 const databaseUrlSchema = z
   .string()
@@ -87,7 +98,9 @@ export const runtimeEnvSchema = z
       .optional(),
     DATABASE_URL: databaseUrlSchema.optional(),
     REDIS_URL: redisUrlSchema.optional(),
+    RABBITMQ_URL: rabbitMqUrlSchema.optional(),
     BULLMQ_ENABLED: booleanFromEnvSchema.optional(),
+    RABBITMQ_ENABLED: booleanFromEnvSchema.optional(),
     BULLMQ_PREFIX: z.string().min(1).optional(),
   })
   .passthrough();
@@ -183,6 +196,12 @@ export function getRedisUrl(env: RuntimeEnv) {
   return validatedEnv.REDIS_URL ?? DEFAULT_REDIS_URL;
 }
 
+export function getRabbitMqUrl(env: RuntimeEnv) {
+  const validatedEnv = getValidatedRuntimeEnv(env);
+
+  return validatedEnv.RABBITMQ_URL ?? DEFAULT_RABBITMQ_URL;
+}
+
 export function getDatabaseUrl(env: RuntimeEnv) {
   const validatedEnv = getValidatedRuntimeEnv(env);
 
@@ -193,6 +212,12 @@ export function isBullMqEnabled(env: RuntimeEnv) {
   const validatedEnv = getValidatedRuntimeEnv(env);
 
   return validatedEnv.BULLMQ_ENABLED ?? Boolean(env.REDIS_URL);
+}
+
+export function isRabbitMqEnabled(env: RuntimeEnv) {
+  const validatedEnv = getValidatedRuntimeEnv(env);
+
+  return validatedEnv.RABBITMQ_ENABLED ?? Boolean(env.RABBITMQ_URL);
 }
 
 export function getBullMqPrefix(env: RuntimeEnv) {
@@ -254,7 +279,9 @@ export function getSharedRuntimeConfig(env: RuntimeEnv) {
     publicApiBasePath: getPublicApiBasePath(env),
     databaseUrl: getDatabaseUrl(env),
     redisUrl: getRedisUrl(env),
+    rabbitMqUrl: getRabbitMqUrl(env),
     bullMqEnabled: isBullMqEnabled(env),
+    rabbitMqEnabled: isRabbitMqEnabled(env),
     bullMqPrefix: getBullMqPrefix(env),
     projectsQueueName: getProjectsQueueName(env),
     healthPath: getHealthPath(),

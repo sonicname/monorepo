@@ -12,7 +12,7 @@ import type {
   ProjectSummary,
   ProjectsResponse,
 } from '@monorepo/contracts';
-import { enqueueProjectsSync } from '@monorepo/queue';
+import { enqueueProjectsSync } from '@monorepo/queues/bullmq';
 import { Form, useActionData, useNavigation } from 'react-router';
 import type { Route } from './+types/home';
 

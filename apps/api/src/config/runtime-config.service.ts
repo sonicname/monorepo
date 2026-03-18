@@ -3,13 +3,15 @@ import {
   getBullMqPrefix,
   getDatabaseUrl,
   getProjectsQueueName,
+  getRabbitMqUrl,
   getRedisUrl,
   getWebOrigin,
   isBullMqEnabled,
+  isRabbitMqEnabled,
   maskConnectionUrl,
   type RuntimeEnv,
 } from '@monorepo/config';
-import { getBullMqConnection } from '@monorepo/queue';
+import { getBullMqConnection } from '@monorepo/queues/bullmq';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
@@ -31,6 +33,13 @@ export class RuntimeConfigService {
       REDIS_URL: this.configService.get<unknown>('REDIS_URL'),
       BULLMQ_ENABLED: this.configService.get<unknown>('BULLMQ_ENABLED'),
       BULLMQ_PREFIX: this.configService.get<unknown>('BULLMQ_PREFIX'),
+    };
+  }
+
+  getRabbitMqRuntimeEnv(): RuntimeEnv {
+    return {
+      RABBITMQ_URL: this.configService.get<unknown>('RABBITMQ_URL'),
+      RABBITMQ_ENABLED: this.configService.get<unknown>('RABBITMQ_ENABLED'),
     };
   }
 
@@ -64,12 +73,24 @@ export class RuntimeConfigService {
     return getDatabaseUrl(this.getDatabaseRuntimeEnv());
   }
 
+  getRabbitMqUrl() {
+    return getRabbitMqUrl(this.getRabbitMqRuntimeEnv());
+  }
+
+  isRabbitMqEnabled() {
+    return isRabbitMqEnabled(this.getRabbitMqRuntimeEnv());
+  }
+
   getBullMqConnection() {
     return getBullMqConnection(this.getBullMqRuntimeEnv());
   }
 
   getMaskedBullMqConnectionUrl() {
     return maskConnectionUrl(this.getBullMqConnectionUrl());
+  }
+
+  getMaskedRabbitMqConnectionUrl() {
+    return maskConnectionUrl(this.getRabbitMqUrl());
   }
 
   getProjectsQueueName() {

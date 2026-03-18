@@ -20,3 +20,15 @@ export type ProjectsResponse = {
   items: ProjectSummary[];
   generatedAt: string;
 };
+
+export type RabbitMqStatus = {
+  enabled: boolean;
+  url: string;
+  connected: boolean;
+  queueName: string;
+  pattern: string;
+  consumerTag: string | null;
+  lastPublishedAt: string | null;
+  lastMessageAt: string | null;
+  lastError: string | null;
+};

@@ -30,6 +30,20 @@ services:
       timeout: 3s
       retries: 10
 
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+    container_name: monorepo-rabbitmq-dev
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ['CMD', 'rabbitmq-diagnostics', 'check_port_connectivity']
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
   api:
     image: node:24-alpine
     container_name: monorepo-api-dev
@@ -38,6 +52,8 @@ services:
       postgres:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     environment:
       API_PORT: '3001'
@@ -48,6 +64,8 @@ services:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/monorepo
       BULLMQ_ENABLED: 'true'
       REDIS_URL: redis://redis:6379
+      RABBITMQ_ENABLED: 'true'
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
       BULLMQ_PREFIX: monorepo
       CHOKIDAR_USEPOLLING: 'true'
     command:
@@ -77,6 +95,8 @@ services:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/monorepo
       BULLMQ_ENABLED: 'true'
       REDIS_URL: redis://redis:6379
+      RABBITMQ_ENABLED: 'true'
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
       BULLMQ_PREFIX: monorepo
       CHOKIDAR_USEPOLLING: 'true'
     command:
@@ -95,3 +115,4 @@ volumes:
   pnpm-store:
   postgres-data:
   redis-data:
+  rabbitmq-data:

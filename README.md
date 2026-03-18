@@ -8,7 +8,7 @@ PNPM workspace with two Node.js applications:
 - `packages/constants`: shared queue names, BullMQ defaults, and event constants
 - `packages/contracts`: shared TypeScript contracts consumed by both apps
 - `packages/database`: shared Drizzle ORM schema, client, and repositories
-- `packages/queue`: shared BullMQ/Redis helpers consumed by both apps
+- `packages/queues`: shared BullMQ and RabbitMQ helpers consumed by both apps
 
 ## Requirements
 
@@ -51,6 +51,7 @@ This starts:
 - `api` on <http://localhost:3001>
 - `postgres` on <http://localhost:5432>
 - `redis` on <http://localhost:6379>
+- `rabbitmq` on <http://localhost:5672> with management UI on <http://localhost:15672>
 
 Stop the stack with:
 
@@ -68,8 +69,10 @@ The SSR home route calls the Nest API health endpoint during its loader.
 - Health endpoint: <http://localhost:3001/health>
 - Projects endpoint: <http://localhost:3001/api/projects>
 - Queue status endpoint: <http://localhost:3001/api/projects/queue>
+- RabbitMQ status endpoint: <http://localhost:3001/api/rabbitmq>
+- RabbitMQ publish endpoint: `POST /api/rabbitmq/projects/sync`
 - Optional server-side override: set `API_URL` before starting the web app
-- Optional shared env values: `WEB_PORT`, `API_PORT`, `WEB_URL`, `API_URL`, `PUBLIC_API_BASE_PATH`, `DATABASE_URL`, `REDIS_URL`, `BULLMQ_ENABLED`, `BULLMQ_PREFIX`
+- Optional shared env values: `WEB_PORT`, `API_PORT`, `WEB_URL`, `API_URL`, `PUBLIC_API_BASE_PATH`, `DATABASE_URL`, `REDIS_URL`, `RABBITMQ_URL`, `BULLMQ_ENABLED`, `RABBITMQ_ENABLED`, `BULLMQ_PREFIX`
 - Shared response type: `ApiHealth` from `@monorepo/contracts`
 
 Example:
@@ -84,7 +87,7 @@ The shared config package exports helpers used by both apps:
 - `getWebOrigin()` and `getApiOrigin()`
 - `getPublicApiBasePath()`, `getHealthUrl()`, and `getProjectsUrl()`
 - `getDatabaseUrl()`
-- `getRedisUrl()`, `isBullMqEnabled()`, `getBullMqPrefix()`, and `getProjectsQueueName()`
+- `getRedisUrl()`, `getRabbitMqUrl()`, `isBullMqEnabled()`, `isRabbitMqEnabled()`, `getBullMqPrefix()`, and `getProjectsQueueName()`
 
 Drizzle usage in this starter:
 
@@ -94,9 +97,17 @@ Drizzle usage in this starter:
 
 BullMQ usage in this starter:
 
-- The web app can enqueue a projects sync job from the SSR route
+- The web app can enqueue a projects sync job from the SSR route through `@monorepo/queues/bullmq`
 - The API app uses `@nestjs/bullmq` for the worker integration and exposes queue status at `/api/projects/queue`
 - Queue names, BullMQ retry/backoff defaults, cleanup policy, and worker event names live in `@monorepo/constants`
+
+RabbitMQ usage in this starter:
+
+- The shared `@monorepo/queues/rabbitmq` entrypoint still exposes low-level helpers for non-Nest consumers or publishers
+- The API app itself now uses Nest microservices transport for RabbitMQ
+- The sample consumer is implemented with `@MessagePattern('projects.sync')`
+- The sample publisher endpoint at `POST /api/rabbitmq/projects/sync` publishes through Nest `ClientProxy`
+- Queue and pattern defaults live in `@monorepo/constants`
 
 Run one app at a time:
 

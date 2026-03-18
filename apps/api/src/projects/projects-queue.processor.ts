@@ -7,7 +7,7 @@ import {
   PROJECTS_QUEUE_NAME,
   type ProjectsSyncJobResult,
 } from '@monorepo/constants';
-import type { ProjectsQueueJob } from '@monorepo/queue';
+import type { ProjectsQueueJob } from '@monorepo/queues/bullmq';
 import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { ProjectsQueueService } from './projects-queue.service';
