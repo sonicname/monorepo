@@ -8,6 +8,8 @@ const DEFAULT_HOST = '127.0.0.1';
 const DEFAULT_WEB_PORT = 5173;
 const DEFAULT_API_PORT = 3001;
 const DEFAULT_PUBLIC_API_BASE_PATH = '/api';
+const DEFAULT_DATABASE_URL =
+  'postgresql://postgres:postgres@127.0.0.1:5432/monorepo';
 const DEFAULT_REDIS_URL = 'redis://127.0.0.1:6379';
 const DEFAULT_BULLMQ_PREFIX = 'monorepo';
 const DEFAULT_PROJECTS_QUEUE_NAME = 'projects';
@@ -23,12 +25,14 @@ export const RUNTIME_ENV_KEYS = [
   'API_URL',
   'WEB_URL',
   'PUBLIC_API_BASE_PATH',
+  'DATABASE_URL',
   'REDIS_URL',
   'BULLMQ_ENABLED',
   'BULLMQ_PREFIX',
 ] as const;
 
 const httpSchemes = ['http:', 'https:'];
+const databaseSchemes = ['postgres:', 'postgresql:'];
 const redisSchemes = ['redis:', 'rediss:'];
 const validatedEnvCache = new WeakMap<object, ValidatedRuntimeEnv>();
 
@@ -49,6 +53,13 @@ const redisUrlSchema = z
   .refine(
     (value) => redisSchemes.includes(new URL(value).protocol),
     'Must be a valid Redis URL',
+  );
+const databaseUrlSchema = z
+  .string()
+  .url()
+  .refine(
+    (value) => databaseSchemes.includes(new URL(value).protocol),
+    'Must be a valid PostgreSQL URL',
   );
 const booleanFromEnvSchema = z.preprocess((value) => {
   if (value === 'true') {
@@ -74,6 +85,7 @@ export const runtimeEnvSchema = z
       .string()
       .startsWith('/', 'Must start with /')
       .optional(),
+    DATABASE_URL: databaseUrlSchema.optional(),
     REDIS_URL: redisUrlSchema.optional(),
     BULLMQ_ENABLED: booleanFromEnvSchema.optional(),
     BULLMQ_PREFIX: z.string().min(1).optional(),
@@ -171,6 +183,12 @@ export function getRedisUrl(env: RuntimeEnv) {
   return validatedEnv.REDIS_URL ?? DEFAULT_REDIS_URL;
 }
 
+export function getDatabaseUrl(env: RuntimeEnv) {
+  const validatedEnv = getValidatedRuntimeEnv(env);
+
+  return validatedEnv.DATABASE_URL ?? DEFAULT_DATABASE_URL;
+}
+
 export function isBullMqEnabled(env: RuntimeEnv) {
   const validatedEnv = getValidatedRuntimeEnv(env);
 
@@ -234,6 +252,7 @@ export function getSharedRuntimeConfig(env: RuntimeEnv) {
     webOrigin: getWebOrigin(env),
     apiOrigin: getApiOrigin(env),
     publicApiBasePath: getPublicApiBasePath(env),
+    databaseUrl: getDatabaseUrl(env),
     redisUrl: getRedisUrl(env),
     bullMqEnabled: isBullMqEnabled(env),
     bullMqPrefix: getBullMqPrefix(env),

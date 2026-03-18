@@ -22,6 +22,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@monorepo/database": "workspace:*",
     "@monorepo/config": "workspace:*",
     "@monorepo/constants": "workspace:*",
     "@monorepo/contracts": "workspace:*",

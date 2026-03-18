@@ -6,6 +6,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { RuntimeConfigModule } from './config/runtime-config.module';
 import { RuntimeConfigService } from './config/runtime-config.service';
+import { DatabaseModule } from './database/database.module';
 import { ProjectsModule } from './projects/projects.module';
 
 const validateConfig = validateRuntimeEnv as unknown as (
@@ -20,6 +21,7 @@ const validateConfig = validateRuntimeEnv as unknown as (
       validate: validateConfig,
     }),
     RuntimeConfigModule,
+    DatabaseModule,
     BullModule.forRootAsync({
       inject: [RuntimeConfigService],
       useFactory: (runtimeConfigService: RuntimeConfigService) => {

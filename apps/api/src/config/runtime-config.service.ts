@@ -1,6 +1,7 @@
 import {
   getApiPort,
   getBullMqPrefix,
+  getDatabaseUrl,
   getProjectsQueueName,
   getRedisUrl,
   getWebOrigin,
@@ -33,6 +34,12 @@ export class RuntimeConfigService {
     };
   }
 
+  getDatabaseRuntimeEnv(): RuntimeEnv {
+    return {
+      DATABASE_URL: this.configService.get<unknown>('DATABASE_URL'),
+    };
+  }
+
   getApiPort() {
     return getApiPort(this.getHttpRuntimeEnv());
   }
@@ -51,6 +58,10 @@ export class RuntimeConfigService {
 
   getBullMqConnectionUrl() {
     return getRedisUrl(this.getBullMqRuntimeEnv());
+  }
+
+  getDatabaseUrl() {
+    return getDatabaseUrl(this.getDatabaseRuntimeEnv());
   }
 
   getBullMqConnection() {

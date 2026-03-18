@@ -7,6 +7,7 @@ PNPM workspace with two Node.js applications:
 - `packages/config`: shared env/config helpers for ports, origins, and API paths
 - `packages/constants`: shared queue names, BullMQ defaults, and event constants
 - `packages/contracts`: shared TypeScript contracts consumed by both apps
+- `packages/database`: shared Drizzle ORM schema, client, and repositories
 - `packages/queue`: shared BullMQ/Redis helpers consumed by both apps
 
 ## Requirements
@@ -26,6 +27,7 @@ Example environment files are provided in:
 
 - `apps/web/.env.example`
 - `apps/api/.env.example`
+- `packages/database/.env.example`
 
 ## Development
 
@@ -47,6 +49,7 @@ This starts:
 
 - `web` on <http://localhost:5173>
 - `api` on <http://localhost:3001>
+- `postgres` on <http://localhost:5432>
 - `redis` on <http://localhost:6379>
 
 Stop the stack with:
@@ -66,7 +69,7 @@ The SSR home route calls the Nest API health endpoint during its loader.
 - Projects endpoint: <http://localhost:3001/api/projects>
 - Queue status endpoint: <http://localhost:3001/api/projects/queue>
 - Optional server-side override: set `API_URL` before starting the web app
-- Optional shared env values: `WEB_PORT`, `API_PORT`, `WEB_URL`, `API_URL`, `PUBLIC_API_BASE_PATH`, `REDIS_URL`, `BULLMQ_ENABLED`, `BULLMQ_PREFIX`
+- Optional shared env values: `WEB_PORT`, `API_PORT`, `WEB_URL`, `API_URL`, `PUBLIC_API_BASE_PATH`, `DATABASE_URL`, `REDIS_URL`, `BULLMQ_ENABLED`, `BULLMQ_PREFIX`
 - Shared response type: `ApiHealth` from `@monorepo/contracts`
 
 Example:
@@ -80,7 +83,14 @@ The shared config package exports helpers used by both apps:
 - `getWebPort()` and `getApiPort()`
 - `getWebOrigin()` and `getApiOrigin()`
 - `getPublicApiBasePath()`, `getHealthUrl()`, and `getProjectsUrl()`
+- `getDatabaseUrl()`
 - `getRedisUrl()`, `isBullMqEnabled()`, `getBullMqPrefix()`, and `getProjectsQueueName()`
+
+Drizzle usage in this starter:
+
+- The database package owns the PostgreSQL schema, client, and repositories
+- The API app consumes `@monorepo/database` through a Nest database service
+- The projects endpoint is backed by Drizzle and seeds default rows if the table is empty
 
 BullMQ usage in this starter:
 
@@ -107,6 +117,15 @@ If you only need the shared workspace packages rebuilt, run:
 
 ```bash
 pnpm run build:packages
+```
+
+Database helpers:
+
+```bash
+pnpm run db:generate
+pnpm run db:migrate
+pnpm run db:push
+pnpm run db:studio
 ```
 
 Start both production servers:
