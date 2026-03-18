@@ -16,7 +16,7 @@ import {
 } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import { RuntimeConfigService } from '../config/runtime-config.service';
-import { ProjectsService } from '../projects/projects.service';
+import type { ProjectsService } from '../projects/projects.service';
 import { RabbitMqService } from './rabbitmq.service';
 
 @Injectable()
