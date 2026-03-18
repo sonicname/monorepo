@@ -35,15 +35,21 @@ export function getApiPort(env: RuntimeEnv) {
 }
 
 export function getWebOrigin(env: RuntimeEnv) {
-  return env.WEB_URL ?? `${DEFAULT_PROTOCOL}://${DEFAULT_HOST}:${getWebPort(env)}`;
+  return (
+    env.WEB_URL ?? `${DEFAULT_PROTOCOL}://${DEFAULT_HOST}:${getWebPort(env)}`
+  );
 }
 
 export function getApiOrigin(env: RuntimeEnv) {
-  return env.API_URL ?? `${DEFAULT_PROTOCOL}://${DEFAULT_HOST}:${getApiPort(env)}`;
+  return (
+    env.API_URL ?? `${DEFAULT_PROTOCOL}://${DEFAULT_HOST}:${getApiPort(env)}`
+  );
 }
 
 export function getPublicApiBasePath(env: RuntimeEnv) {
-  return ensureLeadingSlash(env.PUBLIC_API_BASE_PATH ?? DEFAULT_PUBLIC_API_BASE_PATH);
+  return ensureLeadingSlash(
+    env.PUBLIC_API_BASE_PATH ?? DEFAULT_PUBLIC_API_BASE_PATH,
+  );
 }
 
 export function getHealthPath() {

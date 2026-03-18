@@ -133,7 +133,8 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                 <div className='detail-item'>
                   <span className='detail-key'>Shared package</span>
                   <span className='detail-value'>
-                    @monorepo/config centralizes ports, origins, and public API paths
+                    @monorepo/config centralizes ports, origins, and public API
+                    paths
                   </span>
                 </div>
               </div>
@@ -171,19 +172,17 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             </div>
             <div className='detail-item'>
               <span className='detail-key'>Health endpoint</span>
-              <span className='detail-value'>
-                {loaderData.healthUrl}
-              </span>
+              <span className='detail-value'>{loaderData.healthUrl}</span>
             </div>
             <div className='detail-item'>
               <span className='detail-key'>Public API base path</span>
-              <span className='detail-value'>{loaderData.publicApiBasePath}</span>
+              <span className='detail-value'>
+                {loaderData.publicApiBasePath}
+              </span>
             </div>
             <div className='detail-item'>
               <span className='detail-key'>Projects endpoint</span>
-              <span className='detail-value'>
-                {loaderData.projectsUrl}
-              </span>
+              <span className='detail-value'>{loaderData.projectsUrl}</span>
             </div>
             <div className='detail-item'>
               <span className='detail-key'>Response status</span>

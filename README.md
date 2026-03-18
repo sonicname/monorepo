@@ -18,6 +18,11 @@ PNPM workspace with two Node.js applications:
 pnpm install
 ```
 
+Example environment files are provided in:
+
+- `apps/web/.env.example`
+- `apps/api/.env.example`
+
 ## Development
 
 Run both apps together:
