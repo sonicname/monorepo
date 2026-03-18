@@ -14,9 +14,15 @@ describe('AppController', () => {
     appController = app.get<AppController>(AppController);
   });
 
-  describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(appController.getHello()).toBe('Hello World!');
+  describe('health', () => {
+    it('should return the API health payload', () => {
+      expect(appController.getHealth()).toMatchObject({
+        name: 'api',
+        status: 'ok',
+        message: 'Nest API is reachable from the SSR app.',
+      });
+
+      expect(appController.getHealth().timestamp).toEqual(expect.any(String));
     });
   });
 });

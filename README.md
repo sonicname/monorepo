@@ -33,6 +33,7 @@ App URLs:
 The SSR home route calls the Nest API health endpoint during its loader.
 
 - Health endpoint: <http://localhost:3001/health>
+- Projects endpoint: <http://localhost:3001/api/projects>
 - Optional server-side override: set `API_URL` before starting the web app
 - Shared response type: `ApiHealth` from `@monorepo/contracts`
 

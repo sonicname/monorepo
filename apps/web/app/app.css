@@ -49,6 +49,117 @@ a {
   gap: 1.5rem;
 }
 
+.projects-panel {
+  max-width: 1100px;
+  margin: 1.5rem auto 0;
+}
+
+.projects-header {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.projects-title {
+  margin-top: 0.45rem;
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  line-height: 1;
+  font-weight: 700;
+}
+
+.projects-subtitle {
+  max-width: 38rem;
+  color: rgba(15, 23, 42, 0.75);
+  line-height: 1.7;
+}
+
+.projects-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.project-card {
+  border: 1px solid var(--color-line);
+  border-radius: 24px;
+  background: rgba(255, 252, 247, 0.88);
+  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.06);
+  padding: 1.25rem;
+}
+
+.project-card-empty {
+  border-style: dashed;
+}
+
+.project-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.project-status {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.project-status.tone-complete {
+  background: rgba(22, 163, 74, 0.12);
+  color: #166534;
+}
+
+.project-status.tone-progress {
+  background: rgba(217, 119, 6, 0.14);
+  color: #9a3412;
+}
+
+.project-status.tone-planned {
+  background: rgba(15, 23, 42, 0.08);
+  color: var(--color-ink);
+}
+
+.project-updated {
+  color: rgba(15, 23, 42, 0.6);
+  font-size: 0.92rem;
+}
+
+.project-name {
+  margin-top: 0.9rem;
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.project-summary {
+  margin-top: 0.55rem;
+  max-width: 56rem;
+  color: rgba(15, 23, 42, 0.8);
+  line-height: 1.7;
+}
+
+.stack-list {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.stack-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid var(--color-line);
+  background: rgba(255, 255, 255, 0.72);
+  padding: 0.35rem 0.75rem;
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
 .hero-card,
 .status-card,
 .endpoint-card {

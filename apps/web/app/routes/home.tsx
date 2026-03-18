@@ -1,43 +1,61 @@
-import type { ApiHealth } from '@monorepo/contracts';
+import type { ApiHealth, ProjectSummary, ProjectsResponse } from '@monorepo/contracts';
 import type { Route } from './+types/home';
 
 function getApiBaseUrl() {
   return process.env.API_URL ?? 'http://127.0.0.1:3001';
 }
 
+async function fetchApiJson<T>(input: string): Promise<T> {
+  const response = await fetch(input, {
+    headers: {
+      accept: 'application/json',
+    },
+    signal: AbortSignal.timeout(3000),
+  });
+
+  if (!response.ok) {
+    throw new Error(`API responded with ${response.status} for ${input}`);
+  }
+
+  return (await response.json()) as T;
+}
+
+function getStatusTone(status: ProjectSummary['status']) {
+  switch (status) {
+    case 'complete':
+      return 'tone-complete';
+    case 'in-progress':
+      return 'tone-progress';
+    default:
+      return 'tone-planned';
+  }
+}
+
 export async function loader() {
   const apiBaseUrl = getApiBaseUrl();
+  const checkedAt = new Date().toISOString();
 
-  try {
-    const response = await fetch(`${apiBaseUrl}/health`, {
-      headers: {
-        accept: 'application/json',
-      },
-      signal: AbortSignal.timeout(3000),
-    });
+  const [healthResult, projectsResult] = await Promise.allSettled([
+    fetchApiJson<ApiHealth>(`${apiBaseUrl}/health`),
+    fetchApiJson<ProjectsResponse>(`${apiBaseUrl}/api/projects`),
+  ]);
 
-    if (!response.ok) {
-      throw new Error(`API responded with ${response.status}`);
-    }
+  const health = healthResult.status === 'fulfilled' ? healthResult.value : null;
+  const projects = projectsResult.status === 'fulfilled' ? projectsResult.value : null;
+  const isHealthy = healthResult.status === 'fulfilled';
+  const errorMessage = [healthResult, projectsResult]
+    .filter((result) => result.status === 'rejected')
+    .map((result) => (result.reason instanceof Error ? result.reason.message : 'Unknown API error'))
+    .join(' | ');
 
-    const health = (await response.json()) as ApiHealth;
-
-    return {
-      apiBaseUrl,
-      health,
-      isHealthy: true,
-      checkedAt: new Date().toISOString(),
-      error: null,
-    };
-  } catch (error) {
-    return {
-      apiBaseUrl,
-      health: null,
-      isHealthy: false,
-      checkedAt: new Date().toISOString(),
-      error: error instanceof Error ? error.message : 'Unknown API error',
-    };
-  }
+  return {
+    apiBaseUrl,
+    health,
+    projects,
+    isHealthy,
+    checkedAt,
+    error: errorMessage || null,
+  };
 }
 
 export function meta({}: Route.MetaArgs) {
@@ -57,6 +75,8 @@ export default function Home({ loaderData }: Route.ComponentProps) {
     ? 'API reachable'
     : 'API unavailable';
   const timestamp = loaderData.health?.timestamp ?? loaderData.checkedAt;
+  const projectCount = loaderData.projects?.items.length ?? 0;
+  const projectsTimestamp = loaderData.projects?.generatedAt ?? loaderData.checkedAt;
 
   return (
     <main className='status-shell'>
@@ -87,6 +107,12 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                     NestJS on port 3001 with CORS enabled
                   </span>
                 </div>
+                <div className='detail-item'>
+                  <span className='detail-key'>Shared package</span>
+                  <span className='detail-value'>
+                    @monorepo/contracts provides typed API response contracts
+                  </span>
+                </div>
               </div>
             </article>
 
@@ -101,9 +127,9 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                   </span>
                 </div>
                 <div className='detail-item'>
-                  <span className='detail-key'>Message</span>
+                  <span className='detail-key'>Projects loaded</span>
                   <span className='detail-value'>
-                    {loaderData.health?.message ?? loaderData.error}
+                    {projectCount > 0 ? `${projectCount} items from /api/projects` : loaderData.error}
                   </span>
                 </div>
               </div>
@@ -125,6 +151,12 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               </span>
             </div>
             <div className='detail-item'>
+              <span className='detail-key'>Projects endpoint</span>
+              <span className='detail-value'>
+                {loaderData.apiBaseUrl}/api/projects
+              </span>
+            </div>
+            <div className='detail-item'>
               <span className='detail-key'>Response status</span>
               <span className='detail-value'>
                 {loaderData.health?.status ?? 'error'}
@@ -136,12 +168,22 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                 {loaderData.health?.name ?? 'api'}
               </span>
             </div>
+            <div className='detail-item'>
+              <span className='detail-key'>Projects snapshot</span>
+              <span className='detail-value'>
+                {new Date(projectsTimestamp).toLocaleString()}
+              </span>
+            </div>
           </div>
 
           <div className='endpoint-list'>
             <div className='endpoint-chip'>
               <span className='endpoint-method'>GET</span>
               <span>{loaderData.apiBaseUrl}/health</span>
+            </div>
+            <div className='endpoint-chip'>
+              <span className='endpoint-method'>GET</span>
+              <span>{loaderData.apiBaseUrl}/api/projects</span>
             </div>
             <div className='endpoint-chip'>
               <span className='endpoint-method'>DEV</span>
@@ -152,6 +194,53 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               <span>pnpm build</span>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className='projects-panel'>
+        <div className='projects-header'>
+          <div>
+            <p className='status-label'>Project feed</p>
+            <h2 className='projects-title'>Typed data from Nest rendered in the SSR route.</h2>
+          </div>
+          <p className='projects-subtitle'>
+            This list comes from the shared `ProjectsResponse` contract and the
+            `GET /api/projects` endpoint.
+          </p>
+        </div>
+
+        <div className='projects-list'>
+          {loaderData.projects?.items.map((project) => (
+            <article className='project-card' key={project.id}>
+              <div className='project-meta'>
+                <span className={`project-status ${getStatusTone(project.status)}`}>
+                  {project.status.replace('-', ' ')}
+                </span>
+                <span className='project-updated'>
+                  Updated {new Date(project.updatedAt).toLocaleString()}
+                </span>
+              </div>
+              <h3 className='project-name'>{project.name}</h3>
+              <p className='project-summary'>{project.summary}</p>
+              <div className='stack-list'>
+                {project.stack.map((item) => (
+                  <span className='stack-chip' key={item}>
+                    {item}
+                  </span>
+                ))}
+              </div>
+            </article>
+          ))}
+
+          {!loaderData.projects && (
+            <article className='project-card project-card-empty'>
+              <h3 className='project-name'>Project data unavailable</h3>
+              <p className='project-summary'>
+                The SSR route could not load `GET /api/projects`. Check that the
+                Nest app is running and `API_URL` points at the right host.
+              </p>
+            </article>
+          )}
         </div>
       </section>
     </main>
