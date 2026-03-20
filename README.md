@@ -130,6 +130,27 @@ If you only need the shared workspace packages rebuilt, run:
 pnpm run build:packages
 ```
 
+Generate a new shared workspace package:
+
+```bash
+pnpm gen:package my-package
+```
+
+This creates `packages/my-package` with a standard `package.json`, `tsconfig.json`, and `src/index.ts`. New packages are picked up automatically by `build:packages`, `watch:packages`, `typecheck`, and `clean`.
+
+Advanced generator options:
+
+```bash
+pnpm gen:package my-package --workspace-dep config --workspace-dep contracts --dep zod@^4.3.6 --export cli --export internal/helpers --with-test
+```
+
+Supported flags:
+
+- `--workspace-dep <name>` adds `@monorepo/<name>: workspace:*` to `dependencies`
+- `--dep <name@version>` adds an external dependency to `dependencies`
+- `--export <subpath>` creates `src/<subpath>/index.ts` and registers `./<subpath>` in `exports`
+- `--with-test` creates `src/index.test.ts` and adds a package-level `test` script
+
 Database helpers:
 
 ```bash
