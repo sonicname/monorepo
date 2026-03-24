@@ -1,31 +1,35 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 import {
-  closeDatabase,
-  createDatabase,
+  closeApiDatabase,
+  createApiDatabase,
   createProjectsRepository,
-  type Database,
-  type DatabaseInstance,
+  type ApiDatabase,
+  type ApiDatabaseInstance,
   type ProjectsRepository,
-} from '@monorepo/database';
+} from '@monorepo/database/api';
 import { Injectable, OnApplicationShutdown } from '@nestjs/common';
 import { RuntimeConfigService } from '../config/runtime-config.service';
 
 @Injectable()
 export class DatabaseService implements OnApplicationShutdown {
-  private readonly instance: DatabaseInstance;
+  private readonly instance: ApiDatabaseInstance;
   readonly projectsRepository: ProjectsRepository;
 
   constructor(runtimeConfigService: RuntimeConfigService) {
-    this.instance = createDatabase(
+    this.instance = createApiDatabase(
       runtimeConfigService.getDatabaseRuntimeEnv(),
     );
     this.projectsRepository = createProjectsRepository(this.instance.db);
   }
 
-  get db(): Database {
+  get db(): ApiDatabase {
     return this.instance.db;
   }
 
   async onApplicationShutdown() {
-    await closeDatabase(this.instance);
+    await closeApiDatabase(this.instance);
   }
 }

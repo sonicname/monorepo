@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 import {
+  getApiDatabaseUrl,
   getApiPort,
   getAuthGrpcUrl,
   getBullMqPrefix,
-  getDatabaseUrl,
   getProjectsQueueName,
   getRabbitMqUrl,
   getRedisUrl,
@@ -48,7 +48,7 @@ export class RuntimeConfigService {
 
   getDatabaseRuntimeEnv(): RuntimeEnv {
     return {
-      DATABASE_URL: this.configService.get<unknown>('DATABASE_URL'),
+      API_DATABASE_URL: this.configService.get<unknown>('API_DATABASE_URL'),
     };
   }
 
@@ -79,7 +79,7 @@ export class RuntimeConfigService {
   }
 
   getDatabaseUrl() {
-    return getDatabaseUrl(this.getDatabaseRuntimeEnv());
+    return getApiDatabaseUrl(this.getDatabaseRuntimeEnv());
   }
 
   getRabbitMqUrl() {

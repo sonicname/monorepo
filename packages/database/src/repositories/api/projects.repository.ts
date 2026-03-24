@@ -1,7 +1,8 @@
 import type { ProjectSummary } from '@monorepo/contracts';
 import { asc } from 'drizzle-orm';
-import type { Database } from '../client.js';
-import { projectsTable } from '../schema/index.js';
+import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import type * as apiSchema from '../../schema/api/index.js';
+import { projectsTable } from '../../schema/api/index.js';
 
 const DEFAULT_PROJECTS: ProjectSummary[] = [
   {
@@ -44,7 +45,9 @@ function mapProject(row: typeof projectsTable.$inferSelect): ProjectSummary {
   };
 }
 
-export function createProjectsRepository(db: Database) {
+export function createProjectsRepository(
+  db: PostgresJsDatabase<typeof apiSchema>,
+) {
   return {
     async list(): Promise<ProjectSummary[]> {
       const rows = await db

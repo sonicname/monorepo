@@ -10,6 +10,10 @@ const DEFAULT_API_PORT = 3001;
 const DEFAULT_PUBLIC_API_BASE_PATH = '/api';
 const DEFAULT_DATABASE_URL =
   'postgresql://postgres:postgres@127.0.0.1:5432/monorepo';
+const DEFAULT_AUTH_DATABASE_URL =
+  'postgresql://postgres:postgres@127.0.0.1:5432/monorepo_auth';
+const DEFAULT_API_DATABASE_URL =
+  'postgresql://postgres:postgres@127.0.0.1:5432/monorepo_api';
 const DEFAULT_REDIS_URL = 'redis://127.0.0.1:6379';
 const DEFAULT_RABBITMQ_URL = 'amqp://guest:guest@127.0.0.1:5672';
 const DEFAULT_BULLMQ_PREFIX = 'monorepo';
@@ -29,6 +33,8 @@ export const RUNTIME_ENV_KEYS = [
   'WEB_URL',
   'PUBLIC_API_BASE_PATH',
   'DATABASE_URL',
+  'AUTH_DATABASE_URL',
+  'API_DATABASE_URL',
   'REDIS_URL',
   'RABBITMQ_URL',
   'BULLMQ_ENABLED',
@@ -101,6 +107,8 @@ export const runtimeEnvSchema = z
       .startsWith('/', 'Must start with /')
       .optional(),
     DATABASE_URL: databaseUrlSchema.optional(),
+    AUTH_DATABASE_URL: databaseUrlSchema.optional(),
+    API_DATABASE_URL: databaseUrlSchema.optional(),
     REDIS_URL: redisUrlSchema.optional(),
     RABBITMQ_URL: rabbitMqUrlSchema.optional(),
     BULLMQ_ENABLED: booleanFromEnvSchema.optional(),
@@ -212,6 +220,18 @@ export function getDatabaseUrl(env: RuntimeEnv) {
   const validatedEnv = getValidatedRuntimeEnv(env);
 
   return validatedEnv.DATABASE_URL ?? DEFAULT_DATABASE_URL;
+}
+
+export function getAuthDatabaseUrl(env: RuntimeEnv) {
+  const validatedEnv = getValidatedRuntimeEnv(env);
+
+  return validatedEnv.AUTH_DATABASE_URL ?? DEFAULT_AUTH_DATABASE_URL;
+}
+
+export function getApiDatabaseUrl(env: RuntimeEnv) {
+  const validatedEnv = getValidatedRuntimeEnv(env);
+
+  return validatedEnv.API_DATABASE_URL ?? DEFAULT_API_DATABASE_URL;
 }
 
 export function isBullMqEnabled(env: RuntimeEnv) {

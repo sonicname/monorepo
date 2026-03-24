@@ -17,15 +17,16 @@ services:
     image: postgres:17-alpine
     container_name: monorepo-postgres-dev
     environment:
-      POSTGRES_DB: monorepo
+      POSTGRES_DB: postgres
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
       - '5432:5432'
     volumes:
       - postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U postgres -d monorepo']
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d postgres']
       interval: 5s
       timeout: 3s
       retries: 10
@@ -68,7 +69,7 @@ services:
     environment:
       AUTH_PORT: '3002'
       AUTH_GRPC_PORT: '5001'
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/monorepo
+      AUTH_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/monorepo_auth
       JWT_SECRET: dev-jwt-secret-change-in-prod
       CHOKIDAR_USEPOLLING: 'true'
     command:
@@ -109,7 +110,7 @@ services:
       WEB_PORT: '5173'
       WEB_URL: http://web:5173
       PUBLIC_API_BASE_PATH: /api
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/monorepo
+      API_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/monorepo_api
       BULLMQ_ENABLED: 'true'
       REDIS_URL: redis://redis:6379
       RABBITMQ_ENABLED: 'true'
@@ -120,7 +121,7 @@ services:
     command:
       - sh
       - -lc
-      - corepack enable && pnpm install && pnpm run build:packages && pnpm run db:push && pnpm --filter api dev
+      - corepack enable && pnpm install && pnpm run build:packages && pnpm run db:push:api && pnpm --filter api dev
     ports:
       - '3001:3001'
     volumes:
@@ -148,7 +149,6 @@ services:
       API_PORT: '3001'
       API_URL: http://api:3001
       PUBLIC_API_BASE_PATH: /api
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/monorepo
       BULLMQ_ENABLED: 'true'
       REDIS_URL: redis://redis:6379
       RABBITMQ_ENABLED: 'true'

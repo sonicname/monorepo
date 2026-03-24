@@ -1,6 +1,6 @@
 import {
+  getAuthDatabaseUrl,
   getAuthGrpcPort,
-  getDatabaseUrl,
   type RuntimeEnv,
 } from '@monorepo/config';
 import { Injectable } from '@nestjs/common';
@@ -14,12 +14,12 @@ export class RuntimeConfigService {
 
   getDatabaseRuntimeEnv(): RuntimeEnv {
     return {
-      DATABASE_URL: this.configService.get<unknown>('DATABASE_URL'),
+      AUTH_DATABASE_URL: this.configService.get<unknown>('AUTH_DATABASE_URL'),
     };
   }
 
   getDatabaseUrl() {
-    return getDatabaseUrl(this.getDatabaseRuntimeEnv());
+    return getAuthDatabaseUrl(this.getDatabaseRuntimeEnv());
   }
 
   getAuthPort(): number {

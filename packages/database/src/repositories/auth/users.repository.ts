@@ -1,8 +1,15 @@
 import { eq } from 'drizzle-orm';
-import type { Database } from '../client.js';
-import { usersTable, type NewUserRow, type UserRow } from '../schema/index.js';
+import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import type * as authSchema from '../../schema/auth/index.js';
+import {
+  usersTable,
+  type NewUserRow,
+  type UserRow,
+} from '../../schema/auth/index.js';
 
-export function createUsersRepository(db: Database) {
+export function createUsersRepository(
+  db: PostgresJsDatabase<typeof authSchema>,
+) {
   return {
     async findByEmail(email: string): Promise<UserRow | undefined> {
       const rows = await db

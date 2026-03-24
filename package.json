@@ -22,10 +22,14 @@
     "test:e2e": "pnpm --filter api test:e2e",
     "typecheck": "pnpm run build:packages && pnpm -r --filter ./packages/* typecheck && pnpm --filter web typecheck && pnpm --filter api typecheck",
     "gen:package": "node ./scripts/gen-package.mjs",
-    "db:generate": "pnpm --filter @monorepo/database db:generate",
-    "db:migrate": "pnpm --filter @monorepo/database db:migrate",
-    "db:push": "pnpm --filter @monorepo/database db:push",
-    "db:studio": "pnpm --filter @monorepo/database db:studio",
+    "db:generate:auth": "pnpm --filter @monorepo/database db:generate:auth",
+    "db:generate:api": "pnpm --filter @monorepo/database db:generate:api",
+    "db:migrate:auth": "pnpm --filter @monorepo/database db:migrate:auth",
+    "db:migrate:api": "pnpm --filter @monorepo/database db:migrate:api",
+    "db:push:auth": "pnpm --filter @monorepo/database db:push:auth",
+    "db:push:api": "pnpm --filter @monorepo/database db:push:api",
+    "db:studio:auth": "pnpm --filter @monorepo/database db:studio:auth",
+    "db:studio:api": "pnpm --filter @monorepo/database db:studio:api",
     "format": "pnpm --filter api format"
   }
 }

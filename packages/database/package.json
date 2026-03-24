@@ -9,16 +9,28 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./auth": {
+      "types": "./dist/auth.d.ts",
+      "default": "./dist/auth.js"
+    },
+    "./api": {
+      "types": "./dist/api.d.ts",
+      "default": "./dist/api.js"
     }
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.tools.json",
     "watch": "tsc -p tsconfig.json --watch --preserveWatchOutput",
-    "db:generate": "drizzle-kit generate --config drizzle.config.ts",
-    "db:migrate": "drizzle-kit migrate --config drizzle.config.ts",
-    "db:push": "drizzle-kit push --config drizzle.config.ts",
-    "db:studio": "drizzle-kit studio --config drizzle.config.ts"
+    "db:generate:auth": "drizzle-kit generate --config drizzle.auth.config.ts",
+    "db:generate:api": "drizzle-kit generate --config drizzle.api.config.ts",
+    "db:migrate:auth": "drizzle-kit migrate --config drizzle.auth.config.ts",
+    "db:migrate:api": "drizzle-kit migrate --config drizzle.api.config.ts",
+    "db:push:auth": "drizzle-kit push --config drizzle.auth.config.ts",
+    "db:push:api": "drizzle-kit push --config drizzle.api.config.ts",
+    "db:studio:auth": "drizzle-kit studio --config drizzle.auth.config.ts",
+    "db:studio:api": "drizzle-kit studio --config drizzle.api.config.ts"
   },
   "dependencies": {
     "@monorepo/config": "workspace:*",

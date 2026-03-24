@@ -1,26 +1,26 @@
 import {
-  closeDatabase,
-  createDatabase,
+  closeAuthDatabase,
+  createAuthDatabase,
   createUsersRepository,
-  type DatabaseInstance,
+  type AuthDatabaseInstance,
   type UsersRepository,
-} from '@monorepo/database';
+} from '@monorepo/database/auth';
 import { Injectable, OnApplicationShutdown } from '@nestjs/common';
 import { RuntimeConfigService } from '../config/runtime-config.service';
 
 @Injectable()
 export class DatabaseService implements OnApplicationShutdown {
-  private readonly instance: DatabaseInstance;
+  private readonly instance: AuthDatabaseInstance;
   readonly usersRepository: UsersRepository;
 
   constructor(runtimeConfigService: RuntimeConfigService) {
-    this.instance = createDatabase(
+    this.instance = createAuthDatabase(
       runtimeConfigService.getDatabaseRuntimeEnv(),
     );
     this.usersRepository = createUsersRepository(this.instance.db);
   }
 
   async onApplicationShutdown() {
-    await closeDatabase(this.instance);
+    await closeAuthDatabase(this.instance);
   }
 }
