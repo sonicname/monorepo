@@ -1,4 +1,18 @@
 services:
+  traefik:
+    image: traefik:v3
+    container_name: monorepo-traefik-dev
+    command:
+      - --api.insecure=true
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+    ports:
+      - '80:80'
+      - '8080:8080'
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
   postgres:
     image: postgres:17-alpine
     container_name: monorepo-postgres-dev
@@ -44,6 +58,38 @@ services:
       timeout: 5s
       retries: 12
 
+  auth:
+    image: node:24-alpine
+    container_name: monorepo-auth-dev
+    working_dir: /workspace
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      AUTH_PORT: '3002'
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/monorepo
+      JWT_SECRET: dev-jwt-secret-change-in-prod
+      CHOKIDAR_USEPOLLING: 'true'
+    command:
+      - sh
+      - -lc
+      - corepack enable && pnpm install && pnpm run build:packages && pnpm --filter auth dev
+    ports:
+      - '3002:3002'
+    volumes:
+      - .:/workspace
+      - node_modules:/workspace/node_modules
+      - pnpm-store:/pnpm/store
+    labels:
+      - traefik.enable=true
+      # Route /api/auth/* to the auth service (no JWT middleware — login/register are public)
+      - traefik.http.routers.auth.rule=PathPrefix(`/api/auth`)
+      - traefik.http.routers.auth.entrypoints=web
+      - traefik.http.services.auth.loadbalancer.server.port=3002
+      # Define the forwardAuth middleware here so it can be referenced by other routers
+      - traefik.http.middlewares.jwt-verify.forwardauth.address=http://auth:3002/api/auth/verify
+      - traefik.http.middlewares.jwt-verify.forwardauth.authResponseHeaders=X-User-Id,X-User-Email,X-User-Username
+
   api:
     image: node:24-alpine
     container_name: monorepo-api-dev
@@ -78,6 +124,13 @@ services:
       - .:/workspace
       - node_modules:/workspace/node_modules
       - pnpm-store:/pnpm/store
+    labels:
+      - traefik.enable=true
+      # Route /api/* to the api service, protected by JWT via forwardAuth
+      - traefik.http.routers.api.rule=PathPrefix(`/api`)
+      - traefik.http.routers.api.entrypoints=web
+      - traefik.http.routers.api.middlewares=jwt-verify
+      - traefik.http.services.api.loadbalancer.server.port=3001
 
   web:
     image: node:24-alpine
@@ -109,6 +162,12 @@ services:
       - .:/workspace
       - node_modules:/workspace/node_modules
       - pnpm-store:/pnpm/store
+    labels:
+      - traefik.enable=true
+      # Catch-all — lowest priority, everything not matched by /api/* goes to the web app
+      - traefik.http.routers.web.rule=PathPrefix(`/`)
+      - traefik.http.routers.web.entrypoints=web
+      - traefik.http.services.web.loadbalancer.server.port=5173
 
 volumes:
   node_modules:

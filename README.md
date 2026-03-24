@@ -1,14 +1,127 @@
 # Monorepo Boilerplate
 
-PNPM workspace with two Node.js applications:
+PNPM workspace with a React Router v7 SSR frontend, a NestJS API, a NestJS auth microservice, and Traefik as the API gateway.
 
-- `apps/web`: React Router v7 framework app with server-side rendering
-- `apps/api`: NestJS API server
-- `packages/config`: shared env/config helpers for ports, origins, and API paths
-- `packages/constants`: shared queue names, BullMQ defaults, and event constants
-- `packages/contracts`: shared TypeScript contracts consumed by both apps
-- `packages/database`: shared Drizzle ORM schema, client, and repositories
-- `packages/queues`: shared BullMQ and RabbitMQ helpers consumed by both apps
+| App / Package | Description |
+| --- | --- |
+| `apps/web` | React Router v7 framework app with server-side rendering |
+| `apps/auth` | NestJS auth microservice — register, login, JWT issuance |
+| `apps/api` | NestJS API server — projects, BullMQ, RabbitMQ |
+| `packages/config` | Shared env/config helpers for ports, origins, and API paths |
+| `packages/constants` | Shared queue names, BullMQ defaults, and event constants |
+| `packages/contracts` | Shared TypeScript contracts consumed by both apps |
+| `packages/database` | Shared Drizzle ORM schema, client, and repositories |
+| `packages/queues` | Shared BullMQ and RabbitMQ helpers consumed by both apps |
+
+---
+
+## Architecture
+
+### System Overview
+
+```mermaid
+graph TD
+    Browser(["🌐 Browser"])
+    SSR["apps/web\nReact Router v7 SSR\n:5173"]
+    Traefik["Traefik v3\n:80 · dashboard :8080"]
+    Auth["apps/auth\nNestJS Auth Service\n:3002"]
+    API["apps/api\nNestJS API\n:3001"]
+    PG[("PostgreSQL\n:5432")]
+    Redis[("Redis\n:6379")]
+    Rabbit["RabbitMQ\n:5672"]
+
+    Browser -->|"HTTP :80"| Traefik
+
+    Traefik -->|"PathPrefix /api/auth\nno JWT check"| Auth
+    Traefik -->|"PathPrefix /api\nforwardAuth"| API
+    Traefik -->|"PathPrefix /\ncatch-all"| SSR
+    Traefik -.->|"forwardAuth\nGET /api/auth/verify"| Auth
+
+    SSR -->|"SSR fetch\nAUTH_SERVICE_URL"| Auth
+    SSR -->|"SSR fetch\nAPI_URL"| API
+
+    Auth --> PG
+    API --> PG
+    API --> Redis
+    API --> Rabbit
+```
+
+Traefik determines route priority by rule length — `PathPrefix('/api/auth')` (longer) wins over `PathPrefix('/api')` automatically, so auth routes are never gated by the JWT middleware.
+
+### Auth Request Flow
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant Web as apps/web (SSR)
+    participant Auth as apps/auth :3002
+    participant Traefik
+    participant API as apps/api :3001
+
+    User->>Web: GET /auth
+    Web-->>User: login / register form
+
+    User->>Web: POST /auth (credentials)
+    Note over Web,Auth: SSR calls auth directly (AUTH_SERVICE_URL),<br/>bypassing Traefik
+    Web->>Auth: POST /api/auth/login
+    Auth-->>Web: { accessToken, user }
+    Web-->>User: Set-Cookie __auth → redirect /
+
+    User->>Traefik: GET /api/projects  Authorization: Bearer <token>
+    Traefik->>Auth: GET /api/auth/verify  (forwardAuth)
+    Auth-->>Traefik: 200  X-User-Id · X-User-Email · X-User-Username
+    Traefik->>API: GET /api/projects  (+ X-User-* headers forwarded)
+    API-->>Traefik: 200 { items }
+    Traefik-->>User: 200 { items }
+```
+
+### Package Dependency Graph
+
+```mermaid
+graph LR
+    subgraph apps
+        Web["apps/web"]
+        AuthApp["apps/auth"]
+        APIApp["apps/api"]
+    end
+
+    subgraph packages
+        Config["@monorepo/config"]
+        Contracts["@monorepo/contracts"]
+        Constants["@monorepo/constants"]
+        Database["@monorepo/database"]
+        Queues["@monorepo/queues"]
+    end
+
+    Web --> Config
+    Web --> Contracts
+    Web --> Constants
+    Web --> Queues
+
+    AuthApp --> Config
+    AuthApp --> Database
+
+    APIApp --> Config
+    APIApp --> Contracts
+    APIApp --> Constants
+    APIApp --> Database
+    APIApp --> Queues
+```
+
+### Service Ports
+
+| Service | Port | Notes |
+| --- | --- | --- |
+| Traefik | `80` | Single ingress for browser traffic |
+| Traefik dashboard | `8080` | Dev only |
+| apps/web | `5173` | Also served through Traefik at `/` |
+| apps/auth | `3002` | Also served through Traefik at `/api/auth` |
+| apps/api | `3001` | Also served through Traefik at `/api` (JWT required) |
+| PostgreSQL | `5432` | Shared by auth and api |
+| Redis | `6379` | BullMQ job queue (api only) |
+| RabbitMQ | `5672` | Message broker (`15672` management UI) |
+
+---
 
 ## Requirements
 

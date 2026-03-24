@@ -420,3 +420,146 @@ a {
     border-radius: 22px;
   }
 }
+
+/* ── Auth page ────────────────────────────────────────────── */
+
+.auth-shell {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.auth-card {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  max-width: 440px;
+  border: 1px solid var(--color-line);
+  border-radius: 28px;
+  background: rgba(255, 249, 241, 0.88);
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.1);
+  backdrop-filter: blur(18px);
+  padding: 2rem;
+}
+
+.auth-card::after {
+  content: '';
+  position: absolute;
+  inset: auto -4rem -4rem auto;
+  width: 14rem;
+  height: 14rem;
+  border-radius: 999px;
+  background: linear-gradient(
+    135deg,
+    rgba(217, 119, 6, 0.16),
+    rgba(154, 52, 18, 0.22)
+  );
+  pointer-events: none;
+}
+
+.auth-header {
+  margin-bottom: 1.75rem;
+}
+
+.auth-title {
+  margin-top: 0.9rem;
+  font-size: clamp(2.2rem, 8vw, 3rem);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.auth-form {
+  display: grid;
+  gap: 1.1rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.field-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(15, 23, 42, 0.55);
+}
+
+.field-input {
+  padding: 0.75rem 1rem;
+  border-radius: 14px;
+  border: 1px solid var(--color-line);
+  background: rgba(255, 255, 255, 0.72);
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--color-ink);
+  outline: none;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+
+.field-input::placeholder {
+  color: rgba(15, 23, 42, 0.32);
+}
+
+.field-input:focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.14);
+}
+
+.auth-error {
+  padding: 0.75rem 1rem;
+  border-radius: 14px;
+  background: rgba(220, 38, 38, 0.08);
+  color: #991b1b;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.auth-submit {
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(
+    135deg,
+    var(--color-accent),
+    var(--color-accent-strong)
+  );
+  color: white;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 0.9rem 1.5rem;
+  cursor: pointer;
+  margin-top: 0.4rem;
+  transition: opacity 0.15s;
+}
+
+.auth-submit:hover {
+  opacity: 0.9;
+}
+
+.auth-submit:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.auth-switch {
+  margin-top: 1.5rem;
+  text-align: center;
+  font-size: 0.9rem;
+  color: rgba(15, 23, 42, 0.6);
+}
+
+.auth-link {
+  font-weight: 700;
+  color: var(--color-accent-strong);
+  text-decoration: none;
+}
+
+.auth-link:hover {
+  text-decoration: underline;
+}
