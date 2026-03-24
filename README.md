@@ -138,6 +138,7 @@ For production deployment instructions see [DEPLOY.md](DEPLOY.md).
 
 - Node.js 24+
 - pnpm 10+
+- PostgreSQL 17 (local dev without Docker)
 
 ## Install
 
@@ -150,42 +151,91 @@ The shared workspace packages build to `dist/` and root install runs that build 
 Example environment files are provided in:
 
 - `apps/web/.env.example`
+- `apps/auth/.env.example`
 - `apps/api/.env.example`
 - `packages/database/.env.example`
 
 ## Development
 
-Run both apps together:
+### Option A — Docker Compose (recommended)
 
-```bash
-pnpm dev
-```
-
-This builds the shared workspace packages first, then watches them while the apps run.
-
-Run the full dev stack with Docker Compose:
+Starts the entire stack with a single command. PostgreSQL, Redis, RabbitMQ, and all three apps run as containers. The two service databases (`monorepo_auth`, `monorepo_api`) are created automatically on first startup via `docker/postgres-init.sql`.
 
 ```bash
 docker compose -f docker-compose.dev.yml up --build
 ```
 
-This starts:
+Services started:
 
-- `web` on <http://localhost:5173>
-- `api` on <http://localhost:3001>
-- `postgres` on <http://localhost:5432>
-- `redis` on <http://localhost:6379>
-- `rabbitmq` on <http://localhost:5672> with management UI on <http://localhost:15672>
+| Service   | URL                              |
+| --------- | -------------------------------- |
+| web       | <http://localhost:5173>          |
+| auth      | <http://localhost:3002>          |
+| api       | <http://localhost:3001>          |
+| traefik   | <http://localhost:80> · dashboard <http://localhost:8080> |
+| postgres  | `localhost:5432`                 |
+| redis     | `localhost:6379`                 |
+| rabbitmq  | `localhost:5672` · management <http://localhost:15672> |
 
-Stop the stack with:
+Stop the stack:
 
 ```bash
 docker compose -f docker-compose.dev.yml down
 ```
 
+---
+
+### Option B — Local (no Docker)
+
+**1. Prerequisites**
+
+Install and start PostgreSQL 17, Redis, and RabbitMQ locally (or use individual Docker containers).
+
+**2. Create the two service databases**
+
+```bash
+psql -U postgres -c "CREATE DATABASE monorepo_auth;"
+psql -U postgres -c "CREATE DATABASE monorepo_api;"
+```
+
+**3. Copy and fill in the env files**
+
+```bash
+cp apps/auth/.env.example   apps/auth/.env
+cp apps/api/.env.example    apps/api/.env
+cp apps/web/.env.example    apps/web/.env
+```
+
+Edit each `.env` file if your local service URLs differ from the defaults.
+
+**4. Push database schemas**
+
+```bash
+pnpm db:push:auth   # creates tables in monorepo_auth
+pnpm db:push:api    # creates tables in monorepo_api
+```
+
+**5. Run all apps**
+
+```bash
+pnpm dev
+```
+
+Or run apps individually:
+
+```bash
+pnpm dev:web
+pnpm dev:api
+# apps/auth has no dedicated root script — run from its own directory:
+pnpm --filter auth dev
+```
+
+---
+
 App URLs:
 
 - Web: <http://localhost:5173>
+- Auth: <http://localhost:3002>
 - API: <http://localhost:3001>
 
 The SSR home route calls the Nest API health endpoint during its loader.
@@ -196,7 +246,7 @@ The SSR home route calls the Nest API health endpoint during its loader.
 - RabbitMQ status endpoint: <http://localhost:3001/api/rabbitmq>
 - RabbitMQ publish endpoint: `POST /api/rabbitmq/projects/sync`
 - Optional server-side override: set `API_URL` before starting the web app
-- Optional shared env values: `WEB_PORT`, `API_PORT`, `WEB_URL`, `API_URL`, `PUBLIC_API_BASE_PATH`, `DATABASE_URL`, `REDIS_URL`, `RABBITMQ_URL`, `BULLMQ_ENABLED`, `RABBITMQ_ENABLED`, `BULLMQ_PREFIX`, `AUTH_GRPC_PORT`, `AUTH_GRPC_URL`
+- Optional shared env values: `WEB_PORT`, `API_PORT`, `WEB_URL`, `API_URL`, `PUBLIC_API_BASE_PATH`, `AUTH_DATABASE_URL`, `API_DATABASE_URL`, `REDIS_URL`, `RABBITMQ_URL`, `BULLMQ_ENABLED`, `RABBITMQ_ENABLED`, `BULLMQ_PREFIX`, `AUTH_PORT`, `AUTH_GRPC_PORT`, `AUTH_GRPC_URL`
 - Shared response type: `ApiHealth` from `@monorepo/contracts`
 
 Example:
@@ -210,14 +260,14 @@ The shared config package exports helpers used by both apps:
 - `getWebPort()` and `getApiPort()`
 - `getWebOrigin()` and `getApiOrigin()`
 - `getPublicApiBasePath()`, `getHealthUrl()`, and `getProjectsUrl()`
-- `getDatabaseUrl()`
+- `getAuthDatabaseUrl()` and `getApiDatabaseUrl()`
 - `getRedisUrl()`, `getRabbitMqUrl()`, `isBullMqEnabled()`, `isRabbitMqEnabled()`, `getBullMqPrefix()`, and `getProjectsQueueName()`
 - `getAuthGrpcPort()` and `getAuthGrpcUrl()`
 
 Drizzle usage in this starter:
 
-- The database package owns the PostgreSQL schema, client, and repositories
-- The API app consumes `@monorepo/database` through a Nest database service
+- `packages/database` is split into two sub-path exports — `@monorepo/database/auth` (users schema + repository, `monorepo_auth` database) and `@monorepo/database/api` (projects schema + repository, `monorepo_api` database)
+- Each service uses its own dedicated Drizzle client and migration folder (`drizzle/auth/` and `drizzle/api/`)
 - The projects endpoint is backed by Drizzle and seeds default rows if the table is empty
 
 BullMQ usage in this starter:
@@ -267,6 +317,7 @@ Run one app at a time:
 ```bash
 pnpm dev:web
 pnpm dev:api
+pnpm --filter auth dev
 ```
 
 ## Production
@@ -307,10 +358,21 @@ Supported flags:
 Database helpers:
 
 ```bash
-pnpm run db:generate
-pnpm run db:migrate
-pnpm run db:push
-pnpm run db:studio
+# Push schemas to their respective databases (no migration files)
+pnpm db:push:auth
+pnpm db:push:api
+
+# Generate SQL migration files
+pnpm db:generate:auth
+pnpm db:generate:api
+
+# Apply migration files
+pnpm db:migrate:auth
+pnpm db:migrate:api
+
+# Open Drizzle Studio
+pnpm db:studio:auth
+pnpm db:studio:api
 ```
 
 Start both production servers:
