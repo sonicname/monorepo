@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import {
   AUTH_GRPC_SERVICE_NAME,
   type GetUserRequest,

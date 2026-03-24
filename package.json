@@ -17,7 +17,6 @@
     "start": "concurrently -n web,api -c blue,green \"pnpm --filter web start\" \"pnpm --filter api start:prod\"",
     "start:web": "pnpm --filter web start",
     "start:api": "pnpm --filter api start:prod",
-    "lint": "pnpm --filter api lint",
     "test": "pnpm --filter api test",
     "test:e2e": "pnpm --filter api test:e2e",
     "typecheck": "pnpm run build:packages && pnpm -r --filter ./packages/* typecheck && pnpm --filter web typecheck && pnpm --filter api typecheck",

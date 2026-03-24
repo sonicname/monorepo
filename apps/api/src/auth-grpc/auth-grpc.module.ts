@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   AUTH_GRPC_PACKAGE_NAME,
   AUTH_GRPC_SERVICE_NAME,

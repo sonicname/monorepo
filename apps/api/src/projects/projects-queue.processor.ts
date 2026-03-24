@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/require-await */
 import {
   PROJECTS_QUEUE_EVENT_COMPLETED,
   PROJECTS_QUEUE_EVENT_ERROR,

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   PROJECTS_RABBITMQ_PATTERN,
   PROJECTS_RABBITMQ_QUEUE_NAME,
