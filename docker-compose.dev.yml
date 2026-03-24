@@ -67,6 +67,7 @@ services:
         condition: service_healthy
     environment:
       AUTH_PORT: '3002'
+      AUTH_GRPC_PORT: '5001'
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/monorepo
       JWT_SECRET: dev-jwt-secret-change-in-prod
       CHOKIDAR_USEPOLLING: 'true'
@@ -76,6 +77,7 @@ services:
       - corepack enable && pnpm install && pnpm run build:packages && pnpm --filter auth dev
     ports:
       - '3002:3002'
+      - '5001:5001'
     volumes:
       - .:/workspace
       - node_modules:/workspace/node_modules
@@ -113,6 +115,7 @@ services:
       RABBITMQ_ENABLED: 'true'
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
       BULLMQ_PREFIX: monorepo
+      AUTH_GRPC_URL: auth:5001
       CHOKIDAR_USEPOLLING: 'true'
     command:
       - sh

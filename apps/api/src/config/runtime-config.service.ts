@@ -1,5 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 import {
   getApiPort,
+  getAuthGrpcUrl,
   getBullMqPrefix,
   getDatabaseUrl,
   getProjectsQueueName,
@@ -49,6 +52,12 @@ export class RuntimeConfigService {
     };
   }
 
+  getAuthGrpcRuntimeEnv(): RuntimeEnv {
+    return {
+      AUTH_GRPC_URL: this.configService.get<unknown>('AUTH_GRPC_URL'),
+    };
+  }
+
   getApiPort() {
     return getApiPort(this.getHttpRuntimeEnv());
   }
@@ -95,5 +104,9 @@ export class RuntimeConfigService {
 
   getProjectsQueueName() {
     return getProjectsQueueName(this.getBullMqRuntimeEnv());
+  }
+
+  getAuthGrpcUrl() {
+    return getAuthGrpcUrl(this.getAuthGrpcRuntimeEnv());
   }
 }

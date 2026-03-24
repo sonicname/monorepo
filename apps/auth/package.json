@@ -13,12 +13,16 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
+    "@grpc/grpc-js": "^1.13.0",
+    "@grpc/proto-loader": "^0.7.15",
     "@monorepo/config": "workspace:*",
     "@monorepo/database": "workspace:*",
+    "@monorepo/proto": "workspace:*",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.3",
     "@nestjs/core": "^11.0.1",
     "@nestjs/jwt": "^11.0.0",
+    "@nestjs/microservices": "^11.0.1",
     "@nestjs/passport": "^11.0.0",
     "@nestjs/platform-express": "^11.0.1",
     "bcryptjs": "^2.4.3",

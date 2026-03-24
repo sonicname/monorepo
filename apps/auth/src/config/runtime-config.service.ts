@@ -1,4 +1,4 @@
-import { getDatabaseUrl, type RuntimeEnv } from '@monorepo/config';
+import { getDatabaseUrl, getAuthGrpcPort, type RuntimeEnv } from '@monorepo/config';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
@@ -28,5 +28,19 @@ export class RuntimeConfigService {
     return (
       this.configService.get<string>('JWT_SECRET') ?? 'change-me-in-production'
     );
+  }
+
+  getGrpcRuntimeEnv(): RuntimeEnv {
+    return {
+      AUTH_GRPC_PORT: this.configService.get<unknown>('AUTH_GRPC_PORT'),
+    };
+  }
+
+  getAuthGrpcPort(): number {
+    return getAuthGrpcPort(this.getGrpcRuntimeEnv());
+  }
+
+  getAuthGrpcBindUrl(): string {
+    return `0.0.0.0:${this.getAuthGrpcPort()}`;
   }
 }

@@ -4,6 +4,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AuthGrpcModule } from './auth-grpc/auth-grpc.module';
 import { RuntimeConfigModule } from './config/runtime-config.module';
 import { RuntimeConfigService } from './config/runtime-config.service';
 import { DatabaseModule } from './database/database.module';
@@ -37,6 +38,7 @@ const validateConfig = validateRuntimeEnv as unknown as (
       },
     }) as never,
     ProjectsModule,
+    AuthGrpcModule,
   ],
   controllers: [AppController],
   providers: [AppService],

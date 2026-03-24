@@ -14,6 +14,8 @@ const DEFAULT_REDIS_URL = 'redis://127.0.0.1:6379';
 const DEFAULT_RABBITMQ_URL = 'amqp://guest:guest@127.0.0.1:5672';
 const DEFAULT_BULLMQ_PREFIX = 'monorepo';
 const DEFAULT_PROJECTS_QUEUE_NAME = 'projects';
+const DEFAULT_AUTH_GRPC_PORT = 5001;
+const DEFAULT_AUTH_GRPC_URL = `127.0.0.1:${DEFAULT_AUTH_GRPC_PORT}`;
 const HEALTH_PATH = '/health';
 const PROJECTS_PATH = '/projects';
 const QUEUE_STATUS_PATH = '/queue';
@@ -32,6 +34,8 @@ export const RUNTIME_ENV_KEYS = [
   'BULLMQ_ENABLED',
   'RABBITMQ_ENABLED',
   'BULLMQ_PREFIX',
+  'AUTH_GRPC_PORT',
+  'AUTH_GRPC_URL',
 ] as const;
 
 const httpSchemes = ['http:', 'https:'];
@@ -102,6 +106,8 @@ export const runtimeEnvSchema = z
     BULLMQ_ENABLED: booleanFromEnvSchema.optional(),
     RABBITMQ_ENABLED: booleanFromEnvSchema.optional(),
     BULLMQ_PREFIX: z.string().min(1).optional(),
+    AUTH_GRPC_PORT: positivePortSchema.optional(),
+    AUTH_GRPC_URL: z.string().min(1).optional(),
   })
   .passthrough();
 
@@ -230,6 +236,18 @@ export function getProjectsQueueName(env: RuntimeEnv) {
   getValidatedRuntimeEnv(env);
 
   return DEFAULT_PROJECTS_QUEUE_NAME;
+}
+
+export function getAuthGrpcPort(env: RuntimeEnv) {
+  const validatedEnv = getValidatedRuntimeEnv(env);
+
+  return validatedEnv.AUTH_GRPC_PORT ?? DEFAULT_AUTH_GRPC_PORT;
+}
+
+export function getAuthGrpcUrl(env: RuntimeEnv) {
+  const validatedEnv = getValidatedRuntimeEnv(env);
+
+  return validatedEnv.AUTH_GRPC_URL ?? DEFAULT_AUTH_GRPC_URL;
 }
 
 export function maskConnectionUrl(value: string) {

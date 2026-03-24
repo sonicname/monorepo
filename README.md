@@ -11,6 +11,7 @@ PNPM workspace with a React Router v7 SSR frontend, a NestJS API, a NestJS auth 
 | `packages/constants` | Shared queue names, BullMQ defaults, and event constants |
 | `packages/contracts` | Shared TypeScript contracts consumed by both apps |
 | `packages/database` | Shared Drizzle ORM schema, client, and repositories |
+| `packages/proto` | Shared Protobuf definitions and TypeScript interfaces for gRPC |
 | `packages/queues` | Shared BullMQ and RabbitMQ helpers consumed by both apps |
 
 ---
@@ -24,7 +25,7 @@ graph TD
     Browser(["🌐 Browser"])
     SSR["apps/web\nReact Router v7 SSR\n:5173"]
     Traefik["Traefik v3\n:80 · dashboard :8080"]
-    Auth["apps/auth\nNestJS Auth Service\n:3002"]
+    Auth["apps/auth\nNestJS Auth Service\n:3002 (HTTP) · :5001 (gRPC)"]
     API["apps/api\nNestJS API\n:3001"]
     PG[("PostgreSQL\n:5432")]
     Redis[("Redis\n:6379")]
@@ -39,6 +40,8 @@ graph TD
 
     SSR -->|"SSR fetch\nAUTH_SERVICE_URL"| Auth
     SSR -->|"SSR fetch\nAPI_URL"| API
+
+    API -->|"gRPC\nAUTH_GRPC_URL :5001"| Auth
 
     Auth --> PG
     API --> PG
@@ -90,6 +93,7 @@ graph LR
         Contracts["@monorepo/contracts"]
         Constants["@monorepo/constants"]
         Database["@monorepo/database"]
+        Proto["@monorepo/proto"]
         Queues["@monorepo/queues"]
     end
 
@@ -100,11 +104,13 @@ graph LR
 
     AuthApp --> Config
     AuthApp --> Database
+    AuthApp --> Proto
 
     APIApp --> Config
     APIApp --> Contracts
     APIApp --> Constants
     APIApp --> Database
+    APIApp --> Proto
     APIApp --> Queues
 ```
 
@@ -116,6 +122,7 @@ graph LR
 | Traefik dashboard | `8080` | Dev only |
 | apps/web | `5173` | Also served through Traefik at `/` |
 | apps/auth | `3002` | Also served through Traefik at `/api/auth` |
+| apps/auth gRPC | `5001` | Internal gRPC server, consumed by apps/api |
 | apps/api | `3001` | Also served through Traefik at `/api` (JWT required) |
 | PostgreSQL | `5432` | Shared by auth and api |
 | Redis | `6379` | BullMQ job queue (api only) |
@@ -189,7 +196,7 @@ The SSR home route calls the Nest API health endpoint during its loader.
 - RabbitMQ status endpoint: <http://localhost:3001/api/rabbitmq>
 - RabbitMQ publish endpoint: `POST /api/rabbitmq/projects/sync`
 - Optional server-side override: set `API_URL` before starting the web app
-- Optional shared env values: `WEB_PORT`, `API_PORT`, `WEB_URL`, `API_URL`, `PUBLIC_API_BASE_PATH`, `DATABASE_URL`, `REDIS_URL`, `RABBITMQ_URL`, `BULLMQ_ENABLED`, `RABBITMQ_ENABLED`, `BULLMQ_PREFIX`
+- Optional shared env values: `WEB_PORT`, `API_PORT`, `WEB_URL`, `API_URL`, `PUBLIC_API_BASE_PATH`, `DATABASE_URL`, `REDIS_URL`, `RABBITMQ_URL`, `BULLMQ_ENABLED`, `RABBITMQ_ENABLED`, `BULLMQ_PREFIX`, `AUTH_GRPC_PORT`, `AUTH_GRPC_URL`
 - Shared response type: `ApiHealth` from `@monorepo/contracts`
 
 Example:
@@ -205,6 +212,7 @@ The shared config package exports helpers used by both apps:
 - `getPublicApiBasePath()`, `getHealthUrl()`, and `getProjectsUrl()`
 - `getDatabaseUrl()`
 - `getRedisUrl()`, `getRabbitMqUrl()`, `isBullMqEnabled()`, `isRabbitMqEnabled()`, `getBullMqPrefix()`, and `getProjectsQueueName()`
+- `getAuthGrpcPort()` and `getAuthGrpcUrl()`
 
 Drizzle usage in this starter:
 
@@ -225,6 +233,34 @@ RabbitMQ usage in this starter:
 - The sample consumer is implemented with `@MessagePattern('projects.sync')`
 - The sample publisher endpoint at `POST /api/rabbitmq/projects/sync` publishes through Nest `ClientProxy`
 - Queue and pattern defaults live in `@monorepo/constants`
+
+gRPC usage in this starter:
+
+- The `packages/proto` package owns the Protobuf definitions (`proto/auth.proto`) and exports TypeScript interfaces and `getAuthProtoPath()` for resolving the `.proto` file at runtime
+- The auth service exposes a gRPC server on port `5001` via `Transport.GRPC` (env: `AUTH_GRPC_PORT`)
+- Two RPCs are implemented in `apps/auth/src/auth-grpc/auth-grpc.controller.ts`:
+  - `VerifyToken` — decodes a JWT and returns `{ valid, userId, email, username }`
+  - `GetUser` — looks up a user by ID and returns `{ found, userId, email, username }`
+- The API app registers a `ClientsModule` gRPC client pointing to `AUTH_GRPC_URL` (default: `127.0.0.1:5001`)
+- `AuthGrpcService` in `apps/api/src/auth-grpc/auth-grpc.service.ts` wraps the client and can be injected into any feature module:
+
+```typescript
+// Inject into any service or controller inside apps/api
+constructor(private readonly authGrpcService: AuthGrpcService) {}
+
+this.authGrpcService.verifyToken(token).subscribe(res => { /* res.valid, res.userId */ });
+this.authGrpcService.getUser(userId).subscribe(res => { /* res.found, res.username */ });
+```
+
+- Test directly with `grpcurl`:
+
+```bash
+grpcurl -plaintext -proto packages/proto/proto/auth.proto \
+  -d '{"token":"<jwt>"}' localhost:5001 auth.AuthService/VerifyToken
+
+grpcurl -plaintext -proto packages/proto/proto/auth.proto \
+  -d '{"user_id":"<uuid>"}' localhost:5001 auth.AuthService/GetUser
+```
 
 Run one app at a time:
 
