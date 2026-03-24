@@ -2,17 +2,17 @@
 
 PNPM workspace with a React Router v7 SSR frontend, a NestJS API, a NestJS auth microservice, and Traefik as the API gateway.
 
-| App / Package | Description |
-| --- | --- |
-| `apps/web` | React Router v7 framework app with server-side rendering |
-| `apps/auth` | NestJS auth microservice — register, login, JWT issuance |
-| `apps/api` | NestJS API server — projects, BullMQ, RabbitMQ |
-| `packages/config` | Shared env/config helpers for ports, origins, and API paths |
-| `packages/constants` | Shared queue names, BullMQ defaults, and event constants |
-| `packages/contracts` | Shared TypeScript contracts consumed by both apps |
-| `packages/database` | Shared Drizzle ORM schema, client, and repositories |
-| `packages/proto` | Shared Protobuf definitions and TypeScript interfaces for gRPC |
-| `packages/queues` | Shared BullMQ and RabbitMQ helpers consumed by both apps |
+| App / Package        | Description                                                    |
+| -------------------- | -------------------------------------------------------------- |
+| `apps/web`           | React Router v7 framework app with server-side rendering       |
+| `apps/auth`          | NestJS auth microservice — register, login, JWT issuance       |
+| `apps/api`           | NestJS API server — projects, BullMQ, RabbitMQ                 |
+| `packages/config`    | Shared env/config helpers for ports, origins, and API paths    |
+| `packages/constants` | Shared queue names, BullMQ defaults, and event constants       |
+| `packages/contracts` | Shared TypeScript contracts consumed by both apps              |
+| `packages/database`  | Shared Drizzle ORM schema, client, and repositories            |
+| `packages/proto`     | Shared Protobuf definitions and TypeScript interfaces for gRPC |
+| `packages/queues`    | Shared BullMQ and RabbitMQ helpers consumed by both apps       |
 
 ---
 
@@ -116,17 +116,17 @@ graph LR
 
 ### Service Ports
 
-| Service | Port | Notes |
-| --- | --- | --- |
-| Traefik | `80` | Single ingress for browser traffic |
-| Traefik dashboard | `8080` | Dev only |
-| apps/web | `5173` | Also served through Traefik at `/` |
-| apps/auth | `3002` | Also served through Traefik at `/api/auth` |
-| apps/auth gRPC | `5001` | Internal gRPC server, consumed by apps/api |
-| apps/api | `3001` | Also served through Traefik at `/api` (JWT required) |
-| PostgreSQL | `5432` | Shared by auth and api |
-| Redis | `6379` | BullMQ job queue (api only) |
-| RabbitMQ | `5672` | Message broker (`15672` management UI) |
+| Service           | Port   | Notes                                                |
+| ----------------- | ------ | ---------------------------------------------------- |
+| Traefik           | `80`   | Single ingress for browser traffic                   |
+| Traefik dashboard | `8080` | Dev only                                             |
+| apps/web          | `5173` | Also served through Traefik at `/`                   |
+| apps/auth         | `3002` | Also served through Traefik at `/api/auth`           |
+| apps/auth gRPC    | `5001` | Internal gRPC server, consumed by apps/api           |
+| apps/api          | `3001` | Also served through Traefik at `/api` (JWT required) |
+| PostgreSQL        | `5432` | Shared by auth and api                               |
+| Redis             | `6379` | BullMQ job queue (api only)                          |
+| RabbitMQ          | `5672` | Message broker (`15672` management UI)               |
 
 ---
 

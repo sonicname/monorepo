@@ -1,4 +1,8 @@
-import { getDatabaseUrl, getAuthGrpcPort, type RuntimeEnv } from '@monorepo/config';
+import {
+  getAuthGrpcPort,
+  getDatabaseUrl,
+  type RuntimeEnv,
+} from '@monorepo/config';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
@@ -19,9 +23,7 @@ export class RuntimeConfigService {
   }
 
   getAuthPort(): number {
-    return (
-      this.configService.get<number>('AUTH_PORT') ?? DEFAULT_AUTH_PORT
-    );
+    return this.configService.get<number>('AUTH_PORT') ?? DEFAULT_AUTH_PORT;
   }
 
   getJwtSecret(): string {
