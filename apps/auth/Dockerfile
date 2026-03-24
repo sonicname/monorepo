@@ -1,5 +1,5 @@
 # Build context: monorepo root
-# docker build -f apps/web/Dockerfile -t monorepo-web .
+# docker build -f apps/auth/Dockerfile -t monorepo-auth .
 
 FROM node:24-alpine AS base
 RUN corepack enable
@@ -10,15 +10,15 @@ WORKDIR /app
 COPY . .
 RUN pnpm install --frozen-lockfile
 
-# Build workspace dependencies first, then web
-RUN pnpm --filter web... build
+# Build workspace dependencies first, then auth
+RUN pnpm --filter auth... build
 
 # Produce a standalone deployment folder with only production deps
-RUN pnpm deploy --filter=web --prod /deploy/web
+RUN pnpm deploy --filter=auth --prod /deploy/auth
 
 # ── Final image ─────────────────────────────────────────────────────────────
 FROM node:24-alpine AS runner
 WORKDIR /app
-COPY --from=builder /deploy/web .
-EXPOSE 3000
-CMD ["./node_modules/.bin/react-router-serve", "./build/server/index.js"]
+COPY --from=builder /deploy/auth .
+EXPOSE 3002
+CMD ["node", "dist/main"]

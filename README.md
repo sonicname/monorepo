@@ -123,6 +123,10 @@ graph LR
 
 ---
 
+For production deployment instructions see [DEPLOY.md](DEPLOY.md).
+
+---
+
 ## Requirements
 
 - Node.js 24+
