@@ -8,6 +8,12 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 import type { Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -18,31 +24,36 @@ type AuthenticatedRequest = Request & {
   user: { id: string; email: string; username: string; role: string };
 };
 
+@ApiTags('Auth')
 @Controller('api/auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @ApiOperation({ summary: 'Register a new user' })
   @Post('register')
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
 
+  @ApiOperation({ summary: 'Login with email and password' })
+  @ApiUnauthorizedResponse({ description: 'Invalid credentials' })
   @Post('login')
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
   }
 
+  @ApiOperation({ summary: 'Get current authenticated user' })
+  @ApiBearerAuth()
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT' })
   @UseGuards(JwtAuthGuard)
   @Get('me')
   me(@Request() req: AuthenticatedRequest) {
     return req.user;
   }
 
-  /**
-   * Called by Traefik's forwardAuth middleware before forwarding requests to apps/api.
-   * Returns 200 with X-User-* headers on valid JWT, or 401 (via JwtAuthGuard) on failure.
-   * Traefik propagates the X-User-* headers to the upstream API service.
-   */
+  @ApiOperation({ summary: 'Verify JWT for Traefik forwardAuth' })
+  @ApiBearerAuth()
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT' })
   @UseGuards(JwtAuthGuard)
   @Get('verify')
   @HttpCode(200)
