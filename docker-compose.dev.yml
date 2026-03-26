@@ -75,7 +75,7 @@ services:
     command:
       - sh
       - -lc
-      - corepack enable && pnpm install && pnpm run build:packages && pnpm --filter auth dev
+      - corepack enable && pnpm install && pnpm run build:packages && pnpm run db:push:auth && pnpm --filter auth dev
     ports:
       - '3002:3002'
       - '5001:5001'
@@ -91,7 +91,7 @@ services:
       - traefik.http.services.auth.loadbalancer.server.port=3002
       # Define the forwardAuth middleware here so it can be referenced by other routers
       - traefik.http.middlewares.jwt-verify.forwardauth.address=http://auth:3002/api/auth/verify
-      - traefik.http.middlewares.jwt-verify.forwardauth.authResponseHeaders=X-User-Id,X-User-Email,X-User-Username
+      - traefik.http.middlewares.jwt-verify.forwardauth.authResponseHeaders=X-User-Id,X-User-Email,X-User-Username,X-User-Role
 
   api:
     image: node:24-alpine
@@ -153,6 +153,7 @@ services:
       REDIS_URL: redis://redis:6379
       RABBITMQ_ENABLED: 'true'
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      AUTH_SERVICE_URL: http://auth:3002
       BULLMQ_PREFIX: monorepo
       CHOKIDAR_USEPOLLING: 'true'
     command:
