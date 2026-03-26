@@ -40,7 +40,7 @@ export class AuthService {
     });
 
     return {
-      accessToken: this.signToken(user.id, user.email, user.username),
+      accessToken: this.signToken(user.id, user.email, user.username, user.role),
       user: this.sanitize(user),
     };
   }
@@ -57,13 +57,13 @@ export class AuthService {
     if (!valid) throw new UnauthorizedException('Invalid credentials');
 
     return {
-      accessToken: this.signToken(user.id, user.email, user.username),
+      accessToken: this.signToken(user.id, user.email, user.username, user.role),
       user: this.sanitize(user),
     };
   }
 
-  private signToken(id: string, email: string, username: string): string {
-    const payload: JwtPayload = { sub: id, email, username };
+  private signToken(id: string, email: string, username: string, role: string): string {
+    const payload: JwtPayload = { sub: id, email, username, role };
     return this.jwtService.sign(payload);
   }
 
@@ -71,12 +71,14 @@ export class AuthService {
     id: string;
     email: string;
     username: string;
+    role: string;
     createdAt: string;
   }) {
     return {
       id: user.id,
       email: user.email,
       username: user.username,
+      role: user.role,
       createdAt: user.createdAt,
     };
   }

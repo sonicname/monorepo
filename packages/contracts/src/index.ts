@@ -21,6 +21,20 @@ export type ProjectsResponse = {
   generatedAt: string;
 };
 
+export type UserRole = 'admin' | 'user';
+
+export type AuthUser = {
+  id: string;
+  email: string;
+  username: string;
+  role: UserRole;
+};
+
+export type AuthResponse = {
+  accessToken: string;
+  user: AuthUser & { createdAt: string };
+};
+
 export type RabbitMqStatus = {
   enabled: boolean;
   url: string;

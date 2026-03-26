@@ -13,7 +13,8 @@ import type {
   ProjectsResponse,
 } from '@monorepo/contracts';
 import { enqueueProjectsSync } from '@monorepo/queues/bullmq';
-import { Form, useActionData, useNavigation } from 'react-router';
+import { Form, Link, useActionData, useNavigation } from 'react-router';
+import { getSessionUser } from '../lib/session.server';
 import type { Route } from './+types/home';
 
 function getApiBaseUrl() {
@@ -46,7 +47,8 @@ function getStatusTone(status: ProjectSummary['status']) {
   }
 }
 
-export async function loader() {
+export async function loader({ request }: Route.LoaderArgs) {
+  const user = await getSessionUser(request);
   const apiBaseUrl = getApiBaseUrl();
   const publicApiBasePath = getPublicApiBasePath(process.env);
   const checkedAt = new Date().toISOString();
@@ -78,6 +80,7 @@ export async function loader() {
     .join(' | ');
 
   return {
+    user,
     apiBaseUrl,
     publicApiBasePath,
     healthUrl,
@@ -157,6 +160,30 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 
   return (
     <main className='status-shell'>
+      <div className='user-bar'>
+        {loaderData.user ? (
+          <>
+            <span>
+              {loaderData.user.username} ({loaderData.user.role})
+            </span>
+            {loaderData.user.role === 'admin' && (
+              <Link to='/admin' className='auth-link'>
+                Admin
+              </Link>
+            )}
+            <Form method='post' action='/logout'>
+              <button type='submit' className='auth-link'>
+                Sign out
+              </button>
+            </Form>
+          </>
+        ) : (
+          <Link to='/auth' className='auth-link'>
+            Sign in
+          </Link>
+        )}
+      </div>
+
       <section className='status-grid'>
         <div className='hero-card'>
           <span className='eyebrow'>Monorepo starter</span>

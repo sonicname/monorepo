@@ -24,6 +24,7 @@ export class AuthGrpcController {
         sub: string;
         email: string;
         username: string;
+        role: string;
       }>(data.token);
 
       return {
@@ -32,10 +33,11 @@ export class AuthGrpcController {
         email: payload.email,
         username: payload.username,
         error: '',
+        role: payload.role ?? 'user',
       };
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Invalid token';
-      return { valid: false, userId: '', email: '', username: '', error: message };
+      return { valid: false, userId: '', email: '', username: '', error: message, role: '' };
     }
   }
 
@@ -44,9 +46,9 @@ export class AuthGrpcController {
     const user = await this.databaseService.usersRepository.findById(data.userId);
 
     if (!user) {
-      return { found: false, userId: '', email: '', username: '' };
+      return { found: false, userId: '', email: '', username: '', role: '' };
     }
 
-    return { found: true, userId: user.id, email: user.email, username: user.username };
+    return { found: true, userId: user.id, email: user.email, username: user.username, role: user.role };
   }
 }

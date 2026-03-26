@@ -1,9 +1,5 @@
 import { Form, Link, redirect, useActionData, useNavigation, useSearchParams } from 'react-router';
-import {
-  commitSession,
-  destroySession,
-  getSession,
-} from '../lib/session.server';
+import { commitSession, getSession } from '../lib/session.server';
 import type { Route } from './+types/auth';
 
 const AUTH_SERVICE_URL =
@@ -11,7 +7,7 @@ const AUTH_SERVICE_URL =
 
 type AuthApiResponse = {
   accessToken: string;
-  user: { id: string; email: string; username: string; createdAt: string };
+  user: { id: string; email: string; username: string; role: string; createdAt: string };
 };
 
 type AuthApiError = {
@@ -71,13 +67,6 @@ export async function action({ request }: Route.ActionArgs) {
 
   throw redirect('/', {
     headers: { 'Set-Cookie': await commitSession(session) },
-  });
-}
-
-export async function logoutAction({ request }: Route.ActionArgs) {
-  const session = await getSession(request.headers.get('Cookie'));
-  throw redirect('/auth', {
-    headers: { 'Set-Cookie': await destroySession(session) },
   });
 }
 

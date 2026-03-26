@@ -15,7 +15,7 @@ import { RegisterDto } from './dto/register.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 type AuthenticatedRequest = Request & {
-  user: { id: string; email: string; username: string };
+  user: { id: string; email: string; username: string; role: string };
 };
 
 @Controller('api/auth')
@@ -53,5 +53,6 @@ export class AuthController {
     res.setHeader('X-User-Id', req.user.id);
     res.setHeader('X-User-Email', req.user.email);
     res.setHeader('X-User-Username', req.user.username);
+    res.setHeader('X-User-Role', req.user.role);
   }
 }

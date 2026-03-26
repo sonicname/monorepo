@@ -19,6 +19,7 @@ export interface VerifyTokenResponse {
   email: string;
   username: string;
   error: string;
+  role: string;
 }
 
 export interface GetUserRequest {
@@ -30,4 +31,5 @@ export interface GetUserResponse {
   userId: string;
   email: string;
   username: string;
+  role: string;
 }
