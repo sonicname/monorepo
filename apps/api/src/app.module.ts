@@ -9,6 +9,7 @@ import { AuthGrpcModule } from './auth-grpc/auth-grpc.module';
 import { RuntimeConfigModule } from './config/runtime-config.module';
 import { RuntimeConfigService } from './config/runtime-config.service';
 import { DatabaseModule } from './database/database.module';
+import { ProfileModule } from './profile/profile.module';
 import { ProjectsModule } from './projects/projects.module';
 import { RabbitMqModule } from './rabbitmq/rabbitmq.module';
 
@@ -39,6 +40,7 @@ const validateConfig = validateRuntimeEnv as unknown as (
       },
     }) as never,
     ProjectsModule,
+    ProfileModule,
     AuthGrpcModule,
     AuthModule,
   ],

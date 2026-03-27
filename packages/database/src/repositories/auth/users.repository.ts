@@ -7,6 +7,10 @@ import {
   type UserRow,
 } from '../../schema/auth/index.js';
 
+export type UpdateUserRow = Partial<
+  Pick<UserRow, 'displayName' | 'avatarUrl' | 'bio'>
+>;
+
 export function createUsersRepository(
   db: PostgresJsDatabase<typeof authSchema>,
 ) {
@@ -45,6 +49,16 @@ export function createUsersRepository(
       const rows = await db.insert(usersTable).values(data).returning();
 
       return rows[0]!;
+    },
+
+    async update(id: string, data: UpdateUserRow): Promise<UserRow | undefined> {
+      const rows = await db
+        .update(usersTable)
+        .set({ ...data, updatedAt: new Date().toISOString() })
+        .where(eq(usersTable.id, id))
+        .returning();
+
+      return rows[0];
     },
   };
 }

@@ -33,3 +33,39 @@ export interface GetUserResponse {
   username: string;
   role: string;
 }
+
+export interface GetProfileRequest {
+  userId: string;
+}
+
+export interface GetProfileResponse {
+  found: boolean;
+  userId: string;
+  email: string;
+  username: string;
+  role: string;
+  displayName: string;
+  avatarUrl: string;
+  bio: string;
+  createdAt: string;
+}
+
+export interface UpdateProfileRequest {
+  userId: string;
+  displayName: string;
+  avatarUrl: string;
+  bio: string;
+}
+
+export interface UpdateProfileResponse {
+  success: boolean;
+  error: string;
+  userId: string;
+  email: string;
+  username: string;
+  role: string;
+  displayName: string;
+  avatarUrl: string;
+  bio: string;
+  createdAt: string;
+}

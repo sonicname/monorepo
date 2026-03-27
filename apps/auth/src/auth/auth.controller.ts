@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   HttpCode,
+  Patch,
   Post,
   Request,
   Res,
@@ -18,6 +19,7 @@ import type { Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 type AuthenticatedRequest = Request & {
@@ -49,6 +51,27 @@ export class AuthController {
   @Get('me')
   me(@Request() req: AuthenticatedRequest) {
     return req.user;
+  }
+
+  @ApiOperation({ summary: 'Get current user profile' })
+  @ApiBearerAuth()
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT' })
+  @UseGuards(JwtAuthGuard)
+  @Get('profile')
+  getProfile(@Request() req: AuthenticatedRequest) {
+    return this.authService.getProfile(req.user.id);
+  }
+
+  @ApiOperation({ summary: 'Update current user profile' })
+  @ApiBearerAuth()
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT' })
+  @UseGuards(JwtAuthGuard)
+  @Patch('profile')
+  updateProfile(
+    @Request() req: AuthenticatedRequest,
+    @Body() dto: UpdateProfileDto,
+  ) {
+    return this.authService.updateProfile(req.user.id, dto);
   }
 
   @ApiOperation({ summary: 'Verify JWT for Traefik forwardAuth' })

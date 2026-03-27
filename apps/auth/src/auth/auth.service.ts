@@ -1,6 +1,7 @@
 import {
   ConflictException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -8,6 +9,7 @@ import bcrypt from 'bcryptjs';
 import { DatabaseService } from '../database/database.service';
 import type { LoginDto } from './dto/login.dto';
 import type { RegisterDto } from './dto/register.dto';
+import type { UpdateProfileDto } from './dto/update-profile.dto';
 import type { JwtPayload } from './strategies/jwt.strategy';
 
 const SALT_ROUNDS = 12;
@@ -62,6 +64,25 @@ export class AuthService {
     };
   }
 
+  async getProfile(userId: string) {
+    const user = await this.databaseService.usersRepository.findById(userId);
+    if (!user) throw new NotFoundException('User not found');
+
+    return this.sanitize(user);
+  }
+
+  async updateProfile(userId: string, dto: UpdateProfileDto) {
+    const user = await this.databaseService.usersRepository.update(userId, {
+      displayName: dto.displayName,
+      avatarUrl: dto.avatarUrl,
+      bio: dto.bio,
+    });
+
+    if (!user) throw new NotFoundException('User not found');
+
+    return this.sanitize(user);
+  }
+
   private signToken(id: string, email: string, username: string, role: string): string {
     const payload: JwtPayload = { sub: id, email, username, role };
     return this.jwtService.sign(payload);
@@ -72,6 +93,9 @@ export class AuthService {
     email: string;
     username: string;
     role: string;
+    displayName: string | null;
+    avatarUrl: string | null;
+    bio: string | null;
     createdAt: string;
   }) {
     return {
@@ -79,6 +103,9 @@ export class AuthService {
       email: user.email,
       username: user.username,
       role: user.role,
+      displayName: user.displayName,
+      avatarUrl: user.avatarUrl,
+      bio: user.bio,
       createdAt: user.createdAt,
     };
   }

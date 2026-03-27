@@ -8,6 +8,9 @@ export const usersTable = pgTable('users', {
   username: text('username').notNull().unique(),
   passwordHash: text('password_hash').notNull(),
   role: userRoleEnum('role').default('user').notNull(),
+  displayName: text('display_name'),
+  avatarUrl: text('avatar_url'),
+  bio: text('bio'),
   createdAt: timestamp('created_at', {
     mode: 'string',
     withTimezone: true,

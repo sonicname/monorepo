@@ -1,7 +1,11 @@
 import {
   AUTH_GRPC_SERVICE_NAME,
+  type GetProfileRequest,
+  type GetProfileResponse,
   type GetUserRequest,
   type GetUserResponse,
+  type UpdateProfileRequest,
+  type UpdateProfileResponse,
   type VerifyTokenRequest,
   type VerifyTokenResponse,
 } from '@monorepo/proto';
@@ -12,6 +16,8 @@ import { Observable } from 'rxjs';
 interface AuthGrpcClient {
   verifyToken(data: VerifyTokenRequest): Observable<VerifyTokenResponse>;
   getUser(data: GetUserRequest): Observable<GetUserResponse>;
+  getProfile(data: GetProfileRequest): Observable<GetProfileResponse>;
+  updateProfile(data: UpdateProfileRequest): Observable<UpdateProfileResponse>;
 }
 
 @Injectable()
@@ -34,5 +40,13 @@ export class AuthGrpcService implements OnModuleInit {
 
   getUser(userId: string): Observable<GetUserResponse> {
     return this.authClient.getUser({ userId });
+  }
+
+  getProfile(userId: string): Observable<GetProfileResponse> {
+    return this.authClient.getProfile({ userId });
+  }
+
+  updateProfile(data: UpdateProfileRequest): Observable<UpdateProfileResponse> {
+    return this.authClient.updateProfile(data);
   }
 }

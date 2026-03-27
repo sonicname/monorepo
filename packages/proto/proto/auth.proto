@@ -5,6 +5,8 @@ package auth;
 service AuthService {
   rpc VerifyToken (VerifyTokenRequest) returns (VerifyTokenResponse);
   rpc GetUser (GetUserRequest) returns (GetUserResponse);
+  rpc GetProfile (GetProfileRequest) returns (GetProfileResponse);
+  rpc UpdateProfile (UpdateProfileRequest) returns (UpdateProfileResponse);
 }
 
 message VerifyTokenRequest {
@@ -30,4 +32,40 @@ message GetUserResponse {
   string email = 3;
   string username = 4;
   string role = 5;
+}
+
+message GetProfileRequest {
+  string user_id = 1;
+}
+
+message GetProfileResponse {
+  bool found = 1;
+  string user_id = 2;
+  string email = 3;
+  string username = 4;
+  string role = 5;
+  string display_name = 6;
+  string avatar_url = 7;
+  string bio = 8;
+  string created_at = 9;
+}
+
+message UpdateProfileRequest {
+  string user_id = 1;
+  string display_name = 2;
+  string avatar_url = 3;
+  string bio = 4;
+}
+
+message UpdateProfileResponse {
+  bool success = 1;
+  string error = 2;
+  string user_id = 3;
+  string email = 4;
+  string username = 5;
+  string role = 6;
+  string display_name = 7;
+  string avatar_url = 8;
+  string bio = 9;
+  string created_at = 10;
 }

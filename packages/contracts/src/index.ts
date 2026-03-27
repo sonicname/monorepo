@@ -30,9 +30,16 @@ export type AuthUser = {
   role: UserRole;
 };
 
+export type UserProfile = AuthUser & {
+  displayName: string | null;
+  avatarUrl: string | null;
+  bio: string | null;
+  createdAt: string;
+};
+
 export type AuthResponse = {
   accessToken: string;
-  user: AuthUser & { createdAt: string };
+  user: UserProfile;
 };
 
 export type RabbitMqStatus = {
