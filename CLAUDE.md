@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-pnpm monorepo (v10.32.1) with three apps and six shared packages. Traefik reverse proxy routes all browser traffic: `/api/auth` → auth service (no JWT), `/api` → API (JWT via forwardAuth), `/` → web SSR.
+pnpm monorepo (v10.32.1) with three apps and seven shared packages. Traefik reverse proxy routes all browser traffic: `/api/auth` → auth service (no JWT), `/api` → API (JWT via forwardAuth), `/` → web SSR.
 
 ## Commands
 
@@ -64,6 +64,7 @@ pnpm gen:package <name> [--dep pkg@ver] [--workspace-dep name] [--export subpath
 - **`@monorepo/contracts`** — Shared TypeScript types/interfaces for apps
 - **`@monorepo/database`** — Drizzle ORM. Two sub-path exports: `@monorepo/database/auth` (users schema/repo) and `@monorepo/database/api` (projects schema/repo). Separate Drizzle configs: `drizzle.auth.config.ts`, `drizzle.api.config.ts`
 - **`@monorepo/proto`** — Protobuf definitions (`proto/auth.proto`), TypeScript interfaces, `getAuthProtoPath()` helper
+- **`@monorepo/cache`** — Redis cache helpers via `ioredis`. Provides `createRedisClient(env)`, and JSON-serialised cache operations (`cacheGet`, `cacheSet`, `cacheDel`, `cacheExists`, `cacheExpire`, `cacheTtl`)
 - **`@monorepo/queues`** — BullMQ and RabbitMQ helpers. Sub-path exports: `@monorepo/queues/bullmq`, `@monorepo/queues/rabbitmq`
 
 ### Key Patterns

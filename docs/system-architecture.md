@@ -45,7 +45,7 @@ Comprehensive overview of system topology, data flow, authentication, and integr
                   │        │       │        │   │        │
                   │monorepo│       │BullMQ  │   │Messages│
                   │_auth   │       │Queues  │   │        │
-                  │monorepo│       │        │   │        │
+                  │monorepo│       │Cache   │   │        │
                   │_api    │       │        │   │        │
                   └────────┘       └────────┘   └────────┘
 ```
@@ -324,6 +324,37 @@ Durable: true
   requestedAt: ISO8601 timestamp
 }
 ```
+
+---
+
+## Cache Layer
+
+### @monorepo/cache
+
+**Purpose**: JSON-serialised Redis cache with TTL support, used by any app/service.
+
+**Dependencies**: `ioredis`, `@monorepo/config` (reads `REDIS_URL`).
+
+**API**:
+
+```typescript
+import { createRedisClient, cacheGet, cacheSet, cacheDel } from '@monorepo/cache';
+
+const redis = createRedisClient(process.env);
+
+// Set with 1-hour TTL
+await cacheSet(redis, 'user:123', { name: 'John' }, { ttl: 3600 });
+
+// Get (returns parsed JSON or null)
+const user = await cacheGet<{ name: string }>(redis, 'user:123');
+
+// Delete
+await cacheDel(redis, 'user:123');
+```
+
+**Additional helpers**: `cacheExists`, `cacheExpire`, `cacheTtl`.
+
+**Connection**: Reuses the same `REDIS_URL` as BullMQ. `ioredis` client is created with `lazyConnect: true` — connects on first command.
 
 ---
 
