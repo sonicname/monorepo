@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm gen:package cache --workspace-dep config --dep ioredis@^5.6.1)",
+      "Bash(export PATH=\"/c/Users/phama/AppData/Local/pnpm:$PATH\")",
+      "Bash(pnpm install:*)",
+      "Bash(pnpm --filter @monorepo/cache build)",
+      "Bash(pnpm run:*)",
+      "Bash(pnpm -r --filter './packages/*' exec pwd)",
+      "Bash(pnpm -r --filter './packages/*' build)"
+    ]
+  }
+}
