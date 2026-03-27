@@ -15,7 +15,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
       inject: [RuntimeConfigService],
       useFactory: (runtimeConfigService: RuntimeConfigService) => ({
         secret: runtimeConfigService.getJwtSecret(),
-        signOptions: { expiresIn: '7d' },
+        signOptions: { expiresIn: '15m' },
       }),
     }),
   ],

@@ -18,6 +18,7 @@ import {
 import type { Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -42,6 +43,31 @@ export class AuthController {
   @Post('login')
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
+  }
+
+  @ApiOperation({ summary: 'Refresh access token using a refresh token' })
+  @ApiUnauthorizedResponse({ description: 'Invalid or expired refresh token' })
+  @Post('refresh')
+  @HttpCode(200)
+  refresh(@Body() dto: RefreshTokenDto) {
+    return this.authService.refresh(dto.refreshToken);
+  }
+
+  @ApiOperation({ summary: 'Revoke a refresh token (logout)' })
+  @Post('logout')
+  @HttpCode(204)
+  async logout(@Body() dto: RefreshTokenDto) {
+    await this.authService.logout(dto.refreshToken);
+  }
+
+  @ApiOperation({ summary: 'Revoke all refresh tokens for current user' })
+  @ApiBearerAuth()
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT' })
+  @UseGuards(JwtAuthGuard)
+  @Post('logout-all')
+  @HttpCode(204)
+  async logoutAll(@Request() req: AuthenticatedRequest) {
+    await this.authService.logoutAll(req.user.id);
   }
 
   @ApiOperation({ summary: 'Get current authenticated user' })

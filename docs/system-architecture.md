@@ -100,11 +100,13 @@ Traefik ──HTTP──> Auth      forwardAuth verification (internal)
     │                                │
     │ 1. Validate email/username     │
     │ 2. Hash password (bcrypt 12r)  │
-    │ 3. Create JWT (7-day expiry)   │
-    │ 4. Return token + user data    │
+    │ 3. Create JWT (15-min expiry)  │
+    │ 4. Create refresh token       │
+    │    (30-day, stored as SHA-256)│
+    │ 5. Return tokens + user data  │
     └────────────┬───────────────────┘
                  │ 3. Response:
-                 │ { accessToken, user }
+                 │ { accessToken, refreshToken, user }
                  ▼
     ┌────────────────────────────────┐
     │ Web SSR                         │
@@ -208,6 +210,23 @@ CREATE INDEX idx_users_username ON users(username);
 ```
 
 **Purpose**: User credentials and profile data for authentication.
+
+**refresh_tokens table**
+```sql
+CREATE TABLE refresh_tokens (
+  id TEXT PRIMARY KEY,              -- UUID v4
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token_hash TEXT UNIQUE NOT NULL,  -- SHA-256 hash of raw token
+  revoked BOOLEAN DEFAULT FALSE,    -- Soft-revoke flag
+  expires_at TIMESTAMPTZ NOT NULL,  -- 30-day expiry
+  created_at TIMESTAMPTZ NOT NULL   -- Auto-generated
+);
+
+CREATE INDEX idx_refresh_tokens_token_hash ON refresh_tokens(token_hash);
+CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens(user_id);
+```
+
+**Purpose**: Refresh token storage for token rotation. Raw tokens are never stored — only SHA-256 hashes.
 
 ---
 
@@ -466,8 +485,9 @@ this.authGrpc.verifyToken(token).subscribe(response => {
    - Checks for duplicates (query users table)
    - Hash password with bcrypt (12 rounds)
    - Insert into users table
-   - Generate JWT (HS256, 7-day expiry)
-   - Return { accessToken, user }
+   - Generate JWT (HS256, 15-min expiry)
+   - Generate refresh token (30-day, SHA-256 hashed)
+   - Return { accessToken, refreshToken, user }
 
 4. Web SSR
    - Set session cookie (__auth) with JWT
@@ -555,7 +575,7 @@ RABBITMQ_ENABLED=true
 **Auth Only**:
 ```
 JWT_SECRET=<32+ char secret>
-JWT_EXPIRY=7d
+JWT_EXPIRY=15m (access token), 30d (refresh token)
 ```
 
 **Web Only**:
@@ -603,21 +623,34 @@ const isValid = await bcrypt.compare(password, user.passwordHash);
 // 12 rounds = ~70ms per hash (acceptable for auth)
 ```
 
-### JWT Configuration
+### JWT & Refresh Token Configuration
 
 ```typescript
-const token = jwt.sign(
-  { userId, email, username },
+// Access token — short-lived (15 minutes)
+const accessToken = jwt.sign(
+  { sub: userId, email, username, role },
   process.env.JWT_SECRET,  // HS256 (HMAC-SHA256)
-  { expiresIn: '7d' }
+  { expiresIn: '15m' }
 );
+
+// Refresh token — long-lived (30 days), stored as SHA-256 hash
+const rawToken = randomBytes(48).toString('base64url');
+const tokenHash = createHash('sha256').update(rawToken).digest('hex');
+// Store tokenHash in refresh_tokens table, return rawToken to client
 ```
 
-**JWT Verification Flow**:
-1. Extract token from `Authorization: Bearer <token>`
-2. Decode with `JWT_SECRET`
-3. Verify signature and expiry
-4. Extract claims (userId, email, username)
+**Token Rotation Flow**:
+1. Client sends expired access token → gets 401
+2. Client calls `POST /api/auth/refresh` with `{ refreshToken }`
+3. Auth service verifies hash exists, not revoked, not expired
+4. Old refresh token is **revoked** (one-time use)
+5. New access token + new refresh token issued
+6. Client stores new pair
+
+**Endpoints**:
+- `POST /api/auth/refresh` — exchange refresh token for new pair
+- `POST /api/auth/logout` — revoke single refresh token
+- `POST /api/auth/logout-all` — revoke all user refresh tokens (requires JWT)
 
 ### HTTPS & TLS
 

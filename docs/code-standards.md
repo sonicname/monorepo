@@ -589,10 +589,13 @@ export async function createUser(email: string): Promise<User> {
 - Use bcrypt with 12 rounds minimum
 - Never store plaintext passwords
 
-### JWT Configuration
-- Always use Bearer token scheme
-- Include expiry (default: 7 days)
+### JWT & Refresh Token Configuration
+- Always use Bearer token scheme for access tokens
+- Access token expiry: **15 minutes** (short-lived)
+- Refresh token expiry: **30 days** (long-lived, stored as SHA-256 hash)
+- Refresh tokens use **rotation** — each use revokes the old token and issues a new pair
 - Sign with strong secret (minimum 32 characters)
+- Never store raw refresh tokens in the database — only SHA-256 hashes
 
 ### CORS & Security Headers
 Handled by Traefik in production. For direct service access:

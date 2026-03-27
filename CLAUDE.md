@@ -54,7 +54,7 @@ pnpm gen:package <name> [--dep pkg@ver] [--workspace-dep name] [--export subpath
 ### Apps
 
 - **`apps/web`** — React Router v7 with SSR (Vite, Tailwind v4). Module: `ES2022`/`bundler`. Path alias `~/*` → `./app/*`.
-- **`apps/auth`** — NestJS auth microservice. HTTP on `:3002`, gRPC server on `:5001`. Handles registration, login, JWT issuance, and token verification. Reads `AUTH_DATABASE_URL` → `monorepo_auth` database.
+- **`apps/auth`** — NestJS auth microservice. HTTP on `:3002`, gRPC server on `:5001`. Handles registration, login, JWT issuance (15m access + 30d refresh with rotation), token verification, user profile management, and logout. Reads `AUTH_DATABASE_URL` → `monorepo_auth` database.
 - **`apps/api`** — NestJS API server on `:3001`. Uses BullMQ (Redis), RabbitMQ, gRPC client to auth. Reads `API_DATABASE_URL` → `monorepo_api` database. Protected by Traefik forwardAuth (JWT verified by auth service, user info forwarded as `X-User-*` headers).
 
 ### Packages
@@ -62,7 +62,7 @@ pnpm gen:package <name> [--dep pkg@ver] [--workspace-dep name] [--export subpath
 - **`@monorepo/config`** — Env/config helpers (`getApiPort()`, `getAuthGrpcUrl()`, etc.)
 - **`@monorepo/constants`** — Queue names, BullMQ defaults, event constants
 - **`@monorepo/contracts`** — Shared TypeScript types/interfaces for apps
-- **`@monorepo/database`** — Drizzle ORM. Two sub-path exports: `@monorepo/database/auth` (users schema/repo) and `@monorepo/database/api` (projects schema/repo). Separate Drizzle configs: `drizzle.auth.config.ts`, `drizzle.api.config.ts`
+- **`@monorepo/database`** — Drizzle ORM. Two sub-path exports: `@monorepo/database/auth` (users, refresh_tokens schema/repo) and `@monorepo/database/api` (projects schema/repo). Separate Drizzle configs: `drizzle.auth.config.ts`, `drizzle.api.config.ts`
 - **`@monorepo/proto`** — Protobuf definitions (`proto/auth.proto`), TypeScript interfaces, `getAuthProtoPath()` helper
 - **`@monorepo/cache`** — Redis cache helpers via `ioredis`. Provides `createRedisClient(env)`, and JSON-serialised cache operations (`cacheGet`, `cacheSet`, `cacheDel`, `cacheExists`, `cacheExpire`, `cacheTtl`)
 - **`@monorepo/queues`** — BullMQ and RabbitMQ helpers. Sub-path exports: `@monorepo/queues/bullmq`, `@monorepo/queues/rabbitmq`

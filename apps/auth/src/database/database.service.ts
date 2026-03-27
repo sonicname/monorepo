@@ -1,8 +1,10 @@
 import {
   closeAuthDatabase,
   createAuthDatabase,
+  createRefreshTokensRepository,
   createUsersRepository,
   type AuthDatabaseInstance,
+  type RefreshTokensRepository,
   type UsersRepository,
 } from '@monorepo/database/auth';
 import { Injectable, OnApplicationShutdown } from '@nestjs/common';
@@ -12,12 +14,16 @@ import { RuntimeConfigService } from '../config/runtime-config.service';
 export class DatabaseService implements OnApplicationShutdown {
   private readonly instance: AuthDatabaseInstance;
   readonly usersRepository: UsersRepository;
+  readonly refreshTokensRepository: RefreshTokensRepository;
 
   constructor(runtimeConfigService: RuntimeConfigService) {
     this.instance = createAuthDatabase(
       runtimeConfigService.getDatabaseRuntimeEnv(),
     );
     this.usersRepository = createUsersRepository(this.instance.db);
+    this.refreshTokensRepository = createRefreshTokensRepository(
+      this.instance.db,
+    );
   }
 
   async onApplicationShutdown() {
