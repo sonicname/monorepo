@@ -70,6 +70,7 @@ export class AuthController {
       resource: 'auth',
       ip: req.ip,
       userAgent: req.headers['user-agent'],
+      requestId: req.headers['x-request-id'],
     });
     return result;
   }
@@ -118,6 +119,7 @@ export class AuthController {
       resource: 'auth',
       ip: req.ip,
       userAgent: req.headers['user-agent'],
+      requestId: req.headers['x-request-id'],
     });
     return result;
   }
@@ -133,6 +135,7 @@ export class AuthController {
       resource: 'auth',
       ip: req.ip,
       userAgent: req.headers['user-agent'],
+      requestId: req.headers['x-request-id'],
     });
   }
 
@@ -151,6 +154,7 @@ export class AuthController {
       resource: 'auth',
       ip: req.ip,
       userAgent: req.headers['user-agent'],
+      requestId: req.headers['x-request-id'],
     });
   }
 
@@ -239,6 +243,7 @@ export class AuthController {
       resource: 'auth',
       ip: req.ip,
       userAgent: req.headers['user-agent'],
+      requestId: req.headers['x-request-id'],
     });
     return result;
   }

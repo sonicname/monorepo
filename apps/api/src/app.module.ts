@@ -1,8 +1,9 @@
 import { validateRuntimeEnv } from '@monorepo/config';
 import { BullModule } from '@nestjs/bullmq';
-import { Module } from '@nestjs/common';
+import { type MiddlewareConsumer, Module, type NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
+import { RequestIdMiddleware } from './common/request-id.middleware';
 import { AuthModule } from './auth/auth.module';
 import { AuthGrpcModule } from './auth-grpc/auth-grpc.module';
 import { RuntimeConfigModule } from './config/runtime-config.module';
@@ -51,4 +52,8 @@ const validateConfig = validateRuntimeEnv as unknown as (
   ],
   controllers: [AppController],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(RequestIdMiddleware).forRoutes('*');
+  }
+}

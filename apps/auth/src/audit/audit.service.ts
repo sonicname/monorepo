@@ -16,6 +16,7 @@ export interface AuditEntry {
   resource: string;
   ip?: string;
   userAgent?: string;
+  requestId?: string;
   metadata?: Record<string, unknown>;
 }
 
@@ -34,7 +35,10 @@ export class AuditService {
         resource: entry.resource,
         ip: entry.ip ?? null,
         userAgent: entry.userAgent ?? null,
-        metadata: entry.metadata ?? null,
+        metadata: {
+          ...entry.metadata,
+          ...(entry.requestId && { requestId: entry.requestId }),
+        },
       });
     } catch (error) {
       this.logger.error(

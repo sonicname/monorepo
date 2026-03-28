@@ -5,13 +5,15 @@ import {
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 
 @Catch()
 export class HttpExceptionEnvelopeFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
+    const request = ctx.getRequest<Request>();
     const response = ctx.getResponse<Response>();
+    const requestId = request.headers['x-request-id'] as string | undefined;
 
     const statusCode =
       exception instanceof HttpException
@@ -39,6 +41,7 @@ export class HttpExceptionEnvelopeFilter implements ExceptionFilter {
         message: Array.isArray(message) ? message.join('; ') : message,
         ...(details !== undefined && { details }),
       },
+      ...(requestId && { requestId }),
     });
   }
 }
