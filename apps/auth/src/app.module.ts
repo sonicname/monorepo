@@ -1,11 +1,13 @@
 import { validateRuntimeEnv } from '@monorepo/config';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { AuditModule } from './audit/audit.module';
 import { AuthGrpcModule } from './auth-grpc/auth-grpc.module';
 import { AuthModule } from './auth/auth.module';
 import { RuntimeConfigModule } from './config/runtime-config.module';
 import { CronModule } from './cron/cron.module';
 import { DatabaseModule } from './database/database.module';
+import { EmailModule } from './email/email.module';
 import { HealthModule } from './health/health.module';
 import { ThrottleModule } from './throttle/throttle.module';
 
@@ -22,6 +24,8 @@ const validateConfig = validateRuntimeEnv as unknown as (
     }),
     RuntimeConfigModule,
     DatabaseModule,
+    AuditModule,
+    EmailModule,
     AuthModule,
     AuthGrpcModule,
     CronModule,
