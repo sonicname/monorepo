@@ -26,6 +26,11 @@ const VERIFICATION_TOKEN_BYTES = 32;
 const EMAIL_VERIFY_EXPIRY_HOURS = 24;
 const PASSWORD_RESET_EXPIRY_HOURS = 1;
 
+export interface RequestContext {
+  ip?: string;
+  userAgent?: string;
+}
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -34,7 +39,7 @@ export class AuthService {
     private readonly emailService: EmailService,
   ) {}
 
-  async register(dto: RegisterDto) {
+  async register(dto: RegisterDto, ctx?: RequestContext) {
     const [byEmail, byUsername] = await Promise.all([
       this.databaseService.usersRepository.findByEmail(dto.email),
       this.databaseService.usersRepository.findByUsername(dto.username),
@@ -56,7 +61,7 @@ export class AuthService {
 
     void this.sendVerificationEmail(user.id, user.email);
 
-    const refreshToken = await this.createRefreshToken(user.id);
+    const refreshToken = await this.createRefreshToken(user.id, ctx?.ip, ctx?.userAgent);
 
     return {
       accessToken: this.signAccessToken(user.id, user.email, user.username, user.role),
@@ -65,7 +70,7 @@ export class AuthService {
     };
   }
 
-  async login(dto: LoginDto) {
+  async login(dto: LoginDto, ctx?: RequestContext) {
     const user = await this.databaseService.usersRepository.findByEmail(
       dto.email,
     );
@@ -76,7 +81,7 @@ export class AuthService {
 
     if (!valid) throw new UnauthorizedException('Invalid credentials');
 
-    const refreshToken = await this.createRefreshToken(user.id);
+    const refreshToken = await this.createRefreshToken(user.id, ctx?.ip, ctx?.userAgent);
 
     return {
       accessToken: this.signAccessToken(user.id, user.email, user.username, user.role),
@@ -85,8 +90,8 @@ export class AuthService {
     };
   }
 
-  async refresh(refreshToken: string) {
-    const tokenHash = this.hashToken(refreshToken);
+  async refresh(refreshTokenValue: string, ctx?: RequestContext) {
+    const tokenHash = this.hashToken(refreshTokenValue);
     const stored =
       await this.databaseService.refreshTokensRepository.findByTokenHash(
         tokenHash,
@@ -108,7 +113,7 @@ export class AuthService {
 
     if (!user) throw new UnauthorizedException('User not found');
 
-    const newRefreshToken = await this.createRefreshToken(user.id);
+    const newRefreshToken = await this.createRefreshToken(user.id, ctx?.ip, ctx?.userAgent);
 
     return {
       accessToken: this.signAccessToken(user.id, user.email, user.username, user.role),
@@ -305,7 +310,40 @@ export class AuthService {
     });
   }
 
-  private async createRefreshToken(userId: string): Promise<string> {
+  async getSessions(userId: string) {
+    const tokens =
+      await this.databaseService.refreshTokensRepository.findActiveByUserId(
+        userId,
+      );
+
+    return tokens.map((t) => ({
+      id: t.id,
+      ip: t.ip,
+      userAgent: t.userAgent,
+      createdAt: t.createdAt,
+      expiresAt: t.expiresAt,
+    }));
+  }
+
+  async revokeSession(userId: string, sessionId: string) {
+    const tokens =
+      await this.databaseService.refreshTokensRepository.findActiveByUserId(
+        userId,
+      );
+
+    const session = tokens.find((t) => t.id === sessionId);
+    if (!session) throw new NotFoundException('Session not found');
+
+    await this.databaseService.refreshTokensRepository.revoke(sessionId);
+
+    return { message: 'Session revoked' };
+  }
+
+  private async createRefreshToken(
+    userId: string,
+    ip?: string,
+    userAgent?: string,
+  ): Promise<string> {
     const rawToken = randomBytes(REFRESH_TOKEN_BYTES).toString('base64url');
     const tokenHash = this.hashToken(rawToken);
     const expiresAt = new Date(
@@ -316,6 +354,8 @@ export class AuthService {
       id: crypto.randomUUID(),
       userId,
       tokenHash,
+      ip: ip ?? null,
+      userAgent: userAgent ?? null,
       expiresAt,
     });
 

@@ -1,4 +1,4 @@
-import { and, eq, lt } from 'drizzle-orm';
+import { and, desc, eq, gt, lt } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import type * as authSchema from '../../schema/auth/index.js';
 import {
@@ -30,6 +30,20 @@ export function createRefreshTokensRepository(
         .limit(1);
 
       return rows[0];
+    },
+
+    async findActiveByUserId(userId: string): Promise<RefreshTokenRow[]> {
+      return db
+        .select()
+        .from(refreshTokensTable)
+        .where(
+          and(
+            eq(refreshTokensTable.userId, userId),
+            eq(refreshTokensTable.revoked, false),
+            gt(refreshTokensTable.expiresAt, new Date().toISOString()),
+          ),
+        )
+        .orderBy(desc(refreshTokensTable.createdAt));
     },
 
     async revoke(id: string): Promise<void> {

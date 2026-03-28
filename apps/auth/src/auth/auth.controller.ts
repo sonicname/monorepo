@@ -1,8 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
+  Param,
   Patch,
   Post,
   Request,
@@ -63,7 +65,7 @@ export class AuthController {
   @Throttle({ short: { ttl: 60_000, limit: 5 } })
   @Post('register')
   async register(@Body() dto: RegisterDto, @Request() req: AuthenticatedRequest) {
-    const result = await this.authService.register(dto);
+    const result = await this.authService.register(dto, { ip: req.ip, userAgent: req.headers['user-agent'] });
     void this.auditService.log({
       userId: result.user.id,
       action: 'register',
@@ -83,7 +85,7 @@ export class AuthController {
   @Post('login')
   async login(@Body() dto: LoginDto, @Request() req: AuthenticatedRequest) {
     try {
-      const result = await this.authService.login(dto);
+      const result = await this.authService.login(dto, { ip: req.ip, userAgent: req.headers['user-agent'] });
       void this.auditService.log({
         userId: result.user.id,
         action: 'login',
@@ -112,7 +114,7 @@ export class AuthController {
   @Post('refresh')
   @HttpCode(200)
   async refresh(@Body() dto: RefreshTokenDto, @Request() req: AuthenticatedRequest) {
-    const result = await this.authService.refresh(dto.refreshToken);
+    const result = await this.authService.refresh(dto.refreshToken, { ip: req.ip, userAgent: req.headers['user-agent'] });
     void this.auditService.log({
       userId: result.user.id,
       action: 'refresh_token',
@@ -156,6 +158,30 @@ export class AuthController {
       userAgent: req.headers['user-agent'],
       requestId: req.headers['x-request-id'],
     });
+  }
+
+  @ApiOperation({ summary: 'List active sessions for current user' })
+  @ApiBearerAuth()
+  @ApiOkResponse({ description: 'Active sessions list' })
+  @ApiUnauthorizedResponse({ type: ApiErrorResponseDto, description: 'Invalid or missing JWT' })
+  @UseGuards(JwtAuthGuard)
+  @Get('sessions')
+  getSessions(@Request() req: AuthenticatedRequest) {
+    return this.authService.getSessions(req.user.id);
+  }
+
+  @ApiOperation({ summary: 'Revoke a specific session' })
+  @ApiBearerAuth()
+  @ApiOkResponse({ type: ApiMessageResponseDto, description: 'Session revoked' })
+  @ApiUnauthorizedResponse({ type: ApiErrorResponseDto, description: 'Invalid or missing JWT' })
+  @ApiNotFoundResponse({ type: ApiErrorResponseDto, description: 'Session not found' })
+  @UseGuards(JwtAuthGuard)
+  @Delete('sessions/:id')
+  revokeSession(
+    @Request() req: AuthenticatedRequest,
+    @Param('id') sessionId: string,
+  ) {
+    return this.authService.revokeSession(req.user.id, sessionId);
   }
 
   @ApiOperation({ summary: 'Get current authenticated user' })
