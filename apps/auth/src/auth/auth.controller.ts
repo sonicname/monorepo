@@ -18,6 +18,7 @@ import {
 } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import type { Response } from 'express';
+import { AuditService } from '../audit/audit.service';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
@@ -27,19 +28,32 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 type AuthenticatedRequest = Request & {
   user: { id: string; email: string; username: string; role: string };
+  ip: string;
+  headers: Record<string, string | undefined>;
 };
 
 @ApiTags('Auth')
 @Controller('api/auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly auditService: AuditService,
+  ) {}
 
   @ApiOperation({ summary: 'Register a new user' })
   @ApiTooManyRequestsResponse({ description: 'Rate limit exceeded' })
   @Throttle({ short: { ttl: 60_000, limit: 5 } })
   @Post('register')
-  register(@Body() dto: RegisterDto) {
-    return this.authService.register(dto);
+  async register(@Body() dto: RegisterDto, @Request() req: AuthenticatedRequest) {
+    const result = await this.authService.register(dto);
+    void this.auditService.log({
+      userId: result.user.id,
+      action: 'register',
+      resource: 'auth',
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+    });
+    return result;
   }
 
   @ApiOperation({ summary: 'Login with email and password' })
@@ -47,8 +61,27 @@ export class AuthController {
   @ApiTooManyRequestsResponse({ description: 'Rate limit exceeded' })
   @Throttle({ short: { ttl: 60_000, limit: 5 } })
   @Post('login')
-  login(@Body() dto: LoginDto) {
-    return this.authService.login(dto);
+  async login(@Body() dto: LoginDto, @Request() req: AuthenticatedRequest) {
+    try {
+      const result = await this.authService.login(dto);
+      void this.auditService.log({
+        userId: result.user.id,
+        action: 'login',
+        resource: 'auth',
+        ip: req.ip,
+        userAgent: req.headers['user-agent'],
+      });
+      return result;
+    } catch (error) {
+      void this.auditService.log({
+        action: 'login_failed',
+        resource: 'auth',
+        ip: req.ip,
+        userAgent: req.headers['user-agent'],
+        metadata: { email: dto.email },
+      });
+      throw error;
+    }
   }
 
   @ApiOperation({ summary: 'Refresh access token using a refresh token' })
@@ -57,15 +90,29 @@ export class AuthController {
   @Throttle({ short: { ttl: 60_000, limit: 10 } })
   @Post('refresh')
   @HttpCode(200)
-  refresh(@Body() dto: RefreshTokenDto) {
-    return this.authService.refresh(dto.refreshToken);
+  async refresh(@Body() dto: RefreshTokenDto, @Request() req: AuthenticatedRequest) {
+    const result = await this.authService.refresh(dto.refreshToken);
+    void this.auditService.log({
+      userId: result.user.id,
+      action: 'refresh_token',
+      resource: 'auth',
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+    });
+    return result;
   }
 
   @ApiOperation({ summary: 'Revoke a refresh token (logout)' })
   @Post('logout')
   @HttpCode(204)
-  async logout(@Body() dto: RefreshTokenDto) {
+  async logout(@Body() dto: RefreshTokenDto, @Request() req: AuthenticatedRequest) {
     await this.authService.logout(dto.refreshToken);
+    void this.auditService.log({
+      action: 'logout',
+      resource: 'auth',
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+    });
   }
 
   @ApiOperation({ summary: 'Revoke all refresh tokens for current user' })
@@ -76,6 +123,13 @@ export class AuthController {
   @HttpCode(204)
   async logoutAll(@Request() req: AuthenticatedRequest) {
     await this.authService.logoutAll(req.user.id);
+    void this.auditService.log({
+      userId: req.user.id,
+      action: 'logout_all',
+      resource: 'auth',
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+    });
   }
 
   @ApiOperation({ summary: 'Get current authenticated user' })
@@ -101,11 +155,19 @@ export class AuthController {
   @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT' })
   @UseGuards(JwtAuthGuard)
   @Patch('profile')
-  updateProfile(
+  async updateProfile(
     @Request() req: AuthenticatedRequest,
     @Body() dto: UpdateProfileDto,
   ) {
-    return this.authService.updateProfile(req.user.id, dto);
+    const result = await this.authService.updateProfile(req.user.id, dto);
+    void this.auditService.log({
+      userId: req.user.id,
+      action: 'profile_update',
+      resource: 'auth',
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+    });
+    return result;
   }
 
   @ApiOperation({ summary: 'Verify JWT for Traefik forwardAuth' })

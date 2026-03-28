@@ -1,8 +1,10 @@
 import {
   closeAuthDatabase,
+  createAuditLogsRepository,
   createAuthDatabase,
   createRefreshTokensRepository,
   createUsersRepository,
+  type AuditLogsRepository,
   type AuthDatabaseInstance,
   type RefreshTokensRepository,
   type UsersRepository,
@@ -15,6 +17,7 @@ export class DatabaseService implements OnApplicationShutdown {
   private readonly instance: AuthDatabaseInstance;
   readonly usersRepository: UsersRepository;
   readonly refreshTokensRepository: RefreshTokensRepository;
+  readonly auditLogsRepository: AuditLogsRepository;
 
   constructor(runtimeConfigService: RuntimeConfigService) {
     this.instance = createAuthDatabase(
@@ -24,6 +27,7 @@ export class DatabaseService implements OnApplicationShutdown {
     this.refreshTokensRepository = createRefreshTokensRepository(
       this.instance.db,
     );
+    this.auditLogsRepository = createAuditLogsRepository(this.instance.db);
   }
 
   async ping(): Promise<void> {

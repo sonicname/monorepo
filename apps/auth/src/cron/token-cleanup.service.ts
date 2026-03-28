@@ -8,7 +8,7 @@ export class TokenCleanupService {
 
   constructor(private readonly databaseService: DatabaseService) {}
 
-  /** Run daily at 3:00 AM — delete revoked and expired refresh tokens. */
+  /** Run daily at 3:00 AM — delete revoked/expired refresh tokens and old audit logs. */
   @Cron(CronExpression.EVERY_DAY_AT_3AM)
   async handleCleanup() {
     try {
@@ -17,6 +17,15 @@ export class TokenCleanupService {
     } catch (error) {
       this.logger.error(
         `Failed to clean expired tokens: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+    }
+
+    try {
+      await this.databaseService.auditLogsRepository.deleteOlderThan(90);
+      this.logger.log('Audit logs older than 90 days cleaned up');
+    } catch (error) {
+      this.logger.error(
+        `Failed to clean audit logs: ${error instanceof Error ? error.message : 'Unknown error'}`,
       );
     }
   }
