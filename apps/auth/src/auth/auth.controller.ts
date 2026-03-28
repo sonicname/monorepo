@@ -10,7 +10,13 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import {
+  ApiBadRequestResponse,
   ApiBearerAuth,
+  ApiConflictResponse,
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
   ApiOperation,
   ApiTags,
   ApiTooManyRequestsResponse,
@@ -19,6 +25,13 @@ import {
 import { Throttle } from '@nestjs/throttler';
 import type { Response } from 'express';
 import { AuditService } from '../audit/audit.service';
+import {
+  ApiAuthMeResponseDto,
+  ApiAuthResponseDto,
+  ApiErrorResponseDto,
+  ApiMessageResponseDto,
+  ApiProfileResponseDto,
+} from '../common/swagger-responses.dto';
 import { AuthService } from './auth.service';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { LoginDto } from './dto/login.dto';
@@ -44,6 +57,8 @@ export class AuthController {
   ) {}
 
   @ApiOperation({ summary: 'Register a new user' })
+  @ApiCreatedResponse({ type: ApiAuthResponseDto, description: 'User registered' })
+  @ApiConflictResponse({ type: ApiErrorResponseDto, description: 'Email or username taken' })
   @ApiTooManyRequestsResponse({ description: 'Rate limit exceeded' })
   @Throttle({ short: { ttl: 60_000, limit: 5 } })
   @Post('register')
@@ -60,7 +75,8 @@ export class AuthController {
   }
 
   @ApiOperation({ summary: 'Login with email and password' })
-  @ApiUnauthorizedResponse({ description: 'Invalid credentials' })
+  @ApiCreatedResponse({ type: ApiAuthResponseDto, description: 'Login successful' })
+  @ApiUnauthorizedResponse({ type: ApiErrorResponseDto, description: 'Invalid credentials' })
   @ApiTooManyRequestsResponse({ description: 'Rate limit exceeded' })
   @Throttle({ short: { ttl: 60_000, limit: 5 } })
   @Post('login')
@@ -88,7 +104,8 @@ export class AuthController {
   }
 
   @ApiOperation({ summary: 'Refresh access token using a refresh token' })
-  @ApiUnauthorizedResponse({ description: 'Invalid or expired refresh token' })
+  @ApiOkResponse({ type: ApiAuthResponseDto, description: 'Token refreshed' })
+  @ApiUnauthorizedResponse({ type: ApiErrorResponseDto, description: 'Invalid or expired refresh token' })
   @ApiTooManyRequestsResponse({ description: 'Rate limit exceeded' })
   @Throttle({ short: { ttl: 60_000, limit: 10 } })
   @Post('refresh')
@@ -106,6 +123,7 @@ export class AuthController {
   }
 
   @ApiOperation({ summary: 'Revoke a refresh token (logout)' })
+  @ApiNoContentResponse({ description: 'Token revoked' })
   @Post('logout')
   @HttpCode(204)
   async logout(@Body() dto: RefreshTokenDto, @Request() req: AuthenticatedRequest) {
@@ -120,7 +138,8 @@ export class AuthController {
 
   @ApiOperation({ summary: 'Revoke all refresh tokens for current user' })
   @ApiBearerAuth()
-  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT' })
+  @ApiNoContentResponse({ description: 'All tokens revoked' })
+  @ApiUnauthorizedResponse({ type: ApiErrorResponseDto, description: 'Invalid or missing JWT' })
   @UseGuards(JwtAuthGuard)
   @Post('logout-all')
   @HttpCode(204)
@@ -137,7 +156,8 @@ export class AuthController {
 
   @ApiOperation({ summary: 'Get current authenticated user' })
   @ApiBearerAuth()
-  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT' })
+  @ApiOkResponse({ type: ApiAuthMeResponseDto, description: 'Current user info' })
+  @ApiUnauthorizedResponse({ type: ApiErrorResponseDto, description: 'Invalid or missing JWT' })
   @UseGuards(JwtAuthGuard)
   @Get('me')
   me(@Request() req: AuthenticatedRequest) {
@@ -145,6 +165,8 @@ export class AuthController {
   }
 
   @ApiOperation({ summary: 'Verify email address with token' })
+  @ApiOkResponse({ type: ApiMessageResponseDto, description: 'Email verified' })
+  @ApiBadRequestResponse({ type: ApiErrorResponseDto, description: 'Invalid or expired token' })
   @ApiTooManyRequestsResponse({ description: 'Rate limit exceeded' })
   @Throttle({ short: { ttl: 60_000, limit: 5 } })
   @Post('verify-email')
@@ -155,7 +177,9 @@ export class AuthController {
 
   @ApiOperation({ summary: 'Resend email verification' })
   @ApiBearerAuth()
-  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT' })
+  @ApiOkResponse({ type: ApiMessageResponseDto, description: 'Verification email sent' })
+  @ApiBadRequestResponse({ type: ApiErrorResponseDto, description: 'Already verified' })
+  @ApiUnauthorizedResponse({ type: ApiErrorResponseDto, description: 'Invalid or missing JWT' })
   @ApiTooManyRequestsResponse({ description: 'Rate limit exceeded' })
   @Throttle({ short: { ttl: 60_000, limit: 3 } })
   @UseGuards(JwtAuthGuard)
@@ -166,6 +190,7 @@ export class AuthController {
   }
 
   @ApiOperation({ summary: 'Request password reset email' })
+  @ApiOkResponse({ type: ApiMessageResponseDto, description: 'Reset email sent (if email exists)' })
   @ApiTooManyRequestsResponse({ description: 'Rate limit exceeded' })
   @Throttle({ short: { ttl: 60_000, limit: 3 } })
   @Post('forgot-password')
@@ -175,6 +200,8 @@ export class AuthController {
   }
 
   @ApiOperation({ summary: 'Reset password with token' })
+  @ApiOkResponse({ type: ApiMessageResponseDto, description: 'Password reset successful' })
+  @ApiBadRequestResponse({ type: ApiErrorResponseDto, description: 'Invalid or expired token' })
   @ApiTooManyRequestsResponse({ description: 'Rate limit exceeded' })
   @Throttle({ short: { ttl: 60_000, limit: 5 } })
   @Post('reset-password')
@@ -185,7 +212,9 @@ export class AuthController {
 
   @ApiOperation({ summary: 'Get current user profile' })
   @ApiBearerAuth()
-  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT' })
+  @ApiOkResponse({ type: ApiProfileResponseDto, description: 'User profile' })
+  @ApiUnauthorizedResponse({ type: ApiErrorResponseDto, description: 'Invalid or missing JWT' })
+  @ApiNotFoundResponse({ type: ApiErrorResponseDto, description: 'User not found' })
   @UseGuards(JwtAuthGuard)
   @Get('profile')
   getProfile(@Request() req: AuthenticatedRequest) {
@@ -194,7 +223,9 @@ export class AuthController {
 
   @ApiOperation({ summary: 'Update current user profile' })
   @ApiBearerAuth()
-  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT' })
+  @ApiOkResponse({ type: ApiProfileResponseDto, description: 'Profile updated' })
+  @ApiUnauthorizedResponse({ type: ApiErrorResponseDto, description: 'Invalid or missing JWT' })
+  @ApiNotFoundResponse({ type: ApiErrorResponseDto, description: 'User not found' })
   @UseGuards(JwtAuthGuard)
   @Patch('profile')
   async updateProfile(
@@ -214,7 +245,7 @@ export class AuthController {
 
   @ApiOperation({ summary: 'Verify JWT for Traefik forwardAuth' })
   @ApiBearerAuth()
-  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT' })
+  @ApiUnauthorizedResponse({ type: ApiErrorResponseDto, description: 'Invalid or missing JWT' })
   @UseGuards(JwtAuthGuard)
   @Get('verify')
   @HttpCode(200)
