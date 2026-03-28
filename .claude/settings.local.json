@@ -31,7 +31,10 @@
       "Bash(pnpm --filter auth add @monorepo/constants --workspace)",
       "Bash(find /d/Code/monorepo/apps/api/src -name *cron* -o -name *cleanup* -o -name *schedule*)",
       "Bash(/tmp/doc_checklist.txt:*)",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Bash(pnpm gen:package storage --dep @aws-sdk/client-s3@^3.750.0 --dep @aws-sdk/s3-request-presigner@^3.750.0)",
+      "Bash(pnpm --filter auth add @monorepo/storage --workspace)",
+      "Bash(pnpm --filter api add @monorepo/storage --workspace)"
     ]
   }
 }
