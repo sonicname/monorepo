@@ -1,6 +1,8 @@
 import { AUTH_GRPC_PACKAGE_NAME, getAuthProtoPath } from '@monorepo/proto';
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { HttpExceptionEnvelopeFilter } from './common/http-exception.filter';
+import { ResponseEnvelopeInterceptor } from './common/response-envelope.interceptor';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
@@ -21,6 +23,8 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api/v1', { exclude: ['health', 'docs'] });
 
+  app.useGlobalInterceptors(new ResponseEnvelopeInterceptor());
+  app.useGlobalFilters(new HttpExceptionEnvelopeFilter());
   app.useGlobalPipes(
     new ValidationPipe({
       forbidNonWhitelisted: true,

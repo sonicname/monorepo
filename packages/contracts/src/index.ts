@@ -1,3 +1,24 @@
+// -- Response Envelope --
+
+export type ApiSuccessResponse<T = unknown> = {
+  ok: true;
+  data: T;
+  meta?: Record<string, unknown>;
+};
+
+export type ApiErrorResponse = {
+  ok: false;
+  error: {
+    statusCode: number;
+    message: string;
+    details?: unknown;
+  };
+};
+
+export type ApiResponse<T = unknown> = ApiSuccessResponse<T> | ApiErrorResponse;
+
+// -- Domain Types --
+
 export type ApiHealth = {
   name: string;
   status: 'ok' | 'error';
