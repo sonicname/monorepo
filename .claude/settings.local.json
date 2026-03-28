@@ -11,7 +11,24 @@
       "Bash(pnpm --filter auth typecheck)",
       "Bash(pnpm --filter api typecheck)",
       "Bash(pnpm --filter web typecheck)",
-      "Bash(pnpm test:*)"
+      "Bash(pnpm test:*)",
+      "Bash(pnpm --filter auth add @nestjs/schedule)",
+      "Bash(pnpm --filter api add @nestjs/schedule)",
+      "Bash(pnpm --filter auth add @nestjs/throttler @nestjs/terminus)",
+      "Bash(pnpm --filter api add @nestjs/throttler @nestjs/terminus)",
+      "Bash(pnpm --filter auth add drizzle-orm)",
+      "Bash(pnpm --filter api add drizzle-orm)",
+      "Bash(pnpm --filter auth remove drizzle-orm)",
+      "Bash(pnpm --filter api remove drizzle-orm)",
+      "Bash(pnpm --filter api add ioredis)",
+      "Bash(pnpm gen:package email --workspace-dep config --dep nodemailer@^6.10.1)",
+      "Bash(pnpm --filter @monorepo/email add -D @types/nodemailer)",
+      "Bash(pnpm --filter auth add @monorepo/email)",
+      "Bash(pnpm --filter auth add @monorepo/email --workspace)",
+      "Bash(pnpm --filter auth add -D @types/nodemailer)",
+      "Bash(pnpm --filter @monorepo/email add handlebars)",
+      "Bash(pnpm --filter auth add @nestjs/bullmq bullmq)",
+      "Bash(pnpm --filter auth add @monorepo/constants --workspace)"
     ]
   }
 }
