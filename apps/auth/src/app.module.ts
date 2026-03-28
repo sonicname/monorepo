@@ -13,6 +13,7 @@ import { DatabaseModule } from './database/database.module';
 import { EmailModule } from './email/email.module';
 import { HealthModule } from './health/health.module';
 import { ThrottleModule } from './throttle/throttle.module';
+import { UploadModule } from './upload/upload.module';
 
 const validateConfig = validateRuntimeEnv as unknown as (
   config: Record<string, unknown>,
@@ -40,6 +41,7 @@ const validateConfig = validateRuntimeEnv as unknown as (
     CronModule,
     HealthModule,
     ThrottleModule,
+    UploadModule,
   ],
 })
 export class AppModule implements NestModule {

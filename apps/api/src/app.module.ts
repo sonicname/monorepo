@@ -15,6 +15,7 @@ import { DatabaseModule } from './database/database.module';
 import { ProfileModule } from './profile/profile.module';
 import { ProjectsModule } from './projects/projects.module';
 import { RabbitMqModule } from './rabbitmq/rabbitmq.module';
+import { UploadModule } from './upload/upload.module';
 
 const validateConfig = validateRuntimeEnv as unknown as (
   config: Record<string, unknown>,
@@ -49,6 +50,7 @@ const validateConfig = validateRuntimeEnv as unknown as (
     CronModule,
     HealthModule,
     ThrottleModule,
+    UploadModule,
   ],
   controllers: [AppController],
 })
