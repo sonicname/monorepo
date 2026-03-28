@@ -31,6 +31,7 @@ export type AuthUser = {
 };
 
 export type UserProfile = AuthUser & {
+  emailVerified: boolean;
   displayName: string | null;
   avatarUrl: string | null;
   bio: string | null;

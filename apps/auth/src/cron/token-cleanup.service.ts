@@ -21,6 +21,15 @@ export class TokenCleanupService {
     }
 
     try {
+      await this.databaseService.verificationTokensRepository.deleteExpired();
+      this.logger.log('Expired verification tokens cleaned up');
+    } catch (error) {
+      this.logger.error(
+        `Failed to clean verification tokens: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+    }
+
+    try {
       await this.databaseService.auditLogsRepository.deleteOlderThan(90);
       this.logger.log('Audit logs older than 90 days cleaned up');
     } catch (error) {

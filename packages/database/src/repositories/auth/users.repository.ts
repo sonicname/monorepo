@@ -60,6 +60,29 @@ export function createUsersRepository(
 
       return rows[0];
     },
+
+    async markEmailVerified(id: string): Promise<UserRow | undefined> {
+      const rows = await db
+        .update(usersTable)
+        .set({ emailVerified: true, updatedAt: new Date().toISOString() })
+        .where(eq(usersTable.id, id))
+        .returning();
+
+      return rows[0];
+    },
+
+    async updatePasswordHash(
+      id: string,
+      passwordHash: string,
+    ): Promise<UserRow | undefined> {
+      const rows = await db
+        .update(usersTable)
+        .set({ passwordHash, updatedAt: new Date().toISOString() })
+        .where(eq(usersTable.id, id))
+        .returning();
+
+      return rows[0];
+    },
   };
 }
 

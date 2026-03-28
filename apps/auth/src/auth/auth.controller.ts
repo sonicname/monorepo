@@ -20,10 +20,13 @@ import { Throttle } from '@nestjs/throttler';
 import type { Response } from 'express';
 import { AuditService } from '../audit/audit.service';
 import { AuthService } from './auth.service';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { VerifyEmailDto } from './dto/verify-email.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 type AuthenticatedRequest = Request & {
@@ -139,6 +142,45 @@ export class AuthController {
   @Get('me')
   me(@Request() req: AuthenticatedRequest) {
     return req.user;
+  }
+
+  @ApiOperation({ summary: 'Verify email address with token' })
+  @ApiTooManyRequestsResponse({ description: 'Rate limit exceeded' })
+  @Throttle({ short: { ttl: 60_000, limit: 5 } })
+  @Post('verify-email')
+  @HttpCode(200)
+  verifyEmail(@Body() dto: VerifyEmailDto) {
+    return this.authService.verifyEmail(dto.token);
+  }
+
+  @ApiOperation({ summary: 'Resend email verification' })
+  @ApiBearerAuth()
+  @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT' })
+  @ApiTooManyRequestsResponse({ description: 'Rate limit exceeded' })
+  @Throttle({ short: { ttl: 60_000, limit: 3 } })
+  @UseGuards(JwtAuthGuard)
+  @Post('resend-verification')
+  @HttpCode(200)
+  resendVerification(@Request() req: AuthenticatedRequest) {
+    return this.authService.resendVerificationEmail(req.user.id);
+  }
+
+  @ApiOperation({ summary: 'Request password reset email' })
+  @ApiTooManyRequestsResponse({ description: 'Rate limit exceeded' })
+  @Throttle({ short: { ttl: 60_000, limit: 3 } })
+  @Post('forgot-password')
+  @HttpCode(200)
+  forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(dto.email);
+  }
+
+  @ApiOperation({ summary: 'Reset password with token' })
+  @ApiTooManyRequestsResponse({ description: 'Rate limit exceeded' })
+  @Throttle({ short: { ttl: 60_000, limit: 5 } })
+  @Post('reset-password')
+  @HttpCode(200)
+  resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto.token, dto.password);
   }
 
   @ApiOperation({ summary: 'Get current user profile' })

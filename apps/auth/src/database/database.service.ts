@@ -4,10 +4,12 @@ import {
   createAuthDatabase,
   createRefreshTokensRepository,
   createUsersRepository,
+  createVerificationTokensRepository,
   type AuditLogsRepository,
   type AuthDatabaseInstance,
   type RefreshTokensRepository,
   type UsersRepository,
+  type VerificationTokensRepository,
 } from '@monorepo/database/auth';
 import { Injectable, OnApplicationShutdown } from '@nestjs/common';
 import { RuntimeConfigService } from '../config/runtime-config.service';
@@ -18,6 +20,7 @@ export class DatabaseService implements OnApplicationShutdown {
   readonly usersRepository: UsersRepository;
   readonly refreshTokensRepository: RefreshTokensRepository;
   readonly auditLogsRepository: AuditLogsRepository;
+  readonly verificationTokensRepository: VerificationTokensRepository;
 
   constructor(runtimeConfigService: RuntimeConfigService) {
     this.instance = createAuthDatabase(
@@ -28,6 +31,8 @@ export class DatabaseService implements OnApplicationShutdown {
       this.instance.db,
     );
     this.auditLogsRepository = createAuditLogsRepository(this.instance.db);
+    this.verificationTokensRepository =
+      createVerificationTokensRepository(this.instance.db);
   }
 
   async ping(): Promise<void> {
