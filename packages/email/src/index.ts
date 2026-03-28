@@ -1,3 +1,5 @@
+export * from './templates.js';
+
 import { createTransport, type Transporter } from 'nodemailer';
 import type SMTPTransport from 'nodemailer/lib/smtp-transport';
 

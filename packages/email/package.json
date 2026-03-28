@@ -21,10 +21,12 @@
     "typescript": "^5.9.2"
   },
   "files": [
-    "dist"
+    "dist",
+    "src/templates"
   ],
   "dependencies": {
     "@monorepo/config": "workspace:*",
+    "handlebars": "^4.7.9",
     "nodemailer": "^6.10.1"
   }
 }

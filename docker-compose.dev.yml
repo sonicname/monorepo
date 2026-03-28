@@ -59,6 +59,18 @@ services:
       timeout: 5s
       retries: 12
 
+  maildev:
+    image: maildev/maildev:2.1.0
+    container_name: monorepo-maildev-dev
+    ports:
+      - '1080:1080'
+      - '1025:1025'
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '--spider', 'http://localhost:1080/healthz']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   auth:
     image: node:24-alpine
     container_name: monorepo-auth-dev
@@ -66,11 +78,18 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       AUTH_PORT: '3002'
       AUTH_GRPC_PORT: '5001'
       AUTH_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/monorepo_auth
+      REDIS_URL: redis://redis:6379
       JWT_SECRET: dev-jwt-secret-change-in-prod
+      SMTP_HOST: maildev
+      SMTP_PORT: '1025'
+      SMTP_SECURE: 'false'
+      SMTP_FROM: noreply@monorepo.dev
       CHOKIDAR_USEPOLLING: 'true'
     command:
       - sh
