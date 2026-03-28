@@ -7,6 +7,7 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { AuthGrpcModule } from './auth-grpc/auth-grpc.module';
 import { RuntimeConfigModule } from './config/runtime-config.module';
+import { CronModule } from './cron/cron.module';
 import { RuntimeConfigService } from './config/runtime-config.service';
 import { DatabaseModule } from './database/database.module';
 import { ProfileModule } from './profile/profile.module';
@@ -43,6 +44,7 @@ const validateConfig = validateRuntimeEnv as unknown as (
     ProfileModule,
     AuthGrpcModule,
     AuthModule,
+    CronModule,
   ],
   controllers: [AppController],
   providers: [AppService],

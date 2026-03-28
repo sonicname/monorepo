@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { AuthGrpcModule } from './auth-grpc/auth-grpc.module';
 import { AuthModule } from './auth/auth.module';
 import { RuntimeConfigModule } from './config/runtime-config.module';
+import { CronModule } from './cron/cron.module';
 import { DatabaseModule } from './database/database.module';
 
 const validateConfig = validateRuntimeEnv as unknown as (
@@ -21,6 +22,7 @@ const validateConfig = validateRuntimeEnv as unknown as (
     DatabaseModule,
     AuthModule,
     AuthGrpcModule,
+    CronModule,
   ],
 })
 export class AppModule {}
