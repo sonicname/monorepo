@@ -28,7 +28,10 @@
       "Bash(pnpm --filter auth add -D @types/nodemailer)",
       "Bash(pnpm --filter @monorepo/email add handlebars)",
       "Bash(pnpm --filter auth add @nestjs/bullmq bullmq)",
-      "Bash(pnpm --filter auth add @monorepo/constants --workspace)"
+      "Bash(pnpm --filter auth add @monorepo/constants --workspace)",
+      "Bash(find /d/Code/monorepo/apps/api/src -name *cron* -o -name *cleanup* -o -name *schedule*)",
+      "Bash(/tmp/doc_checklist.txt:*)",
+      "Read(//tmp/**)"
     ]
   }
 }

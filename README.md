@@ -2,17 +2,19 @@
 
 PNPM workspace with a React Router v7 SSR frontend, a NestJS API, a NestJS auth microservice, and Traefik as the API gateway.
 
-| App / Package        | Description                                                    |
-| -------------------- | -------------------------------------------------------------- |
-| `apps/web`           | React Router v7 framework app with server-side rendering       |
-| `apps/auth`          | NestJS auth microservice — register, login, JWT issuance       |
-| `apps/api`           | NestJS API server — projects, BullMQ, RabbitMQ                 |
-| `packages/config`    | Shared env/config helpers for ports, origins, and API paths    |
-| `packages/constants` | Shared queue names, BullMQ defaults, and event constants       |
-| `packages/contracts` | Shared TypeScript contracts consumed by both apps              |
-| `packages/database`  | Shared Drizzle ORM schema, client, and repositories            |
-| `packages/proto`     | Shared Protobuf definitions and TypeScript interfaces for gRPC |
-| `packages/queues`    | Shared BullMQ and RabbitMQ helpers consumed by both apps       |
+| App / Package        | Description                                                                        |
+| -------------------- | ---------------------------------------------------------------------------------- |
+| `apps/web`           | React Router v7 framework app with server-side rendering                           |
+| `apps/auth`          | NestJS auth microservice — JWT (15m access + 30d refresh rotation), email verify, password reset, profile, audit trail |
+| `apps/api`           | NestJS API server — projects, profile (via gRPC), BullMQ, RabbitMQ                 |
+| `packages/cache`     | Redis cache helpers via ioredis (get, set, del, exists, expire, ttl)               |
+| `packages/config`    | Shared env/config helpers for ports, origins, and API paths                        |
+| `packages/constants` | Shared queue names, BullMQ/email defaults, and event constants                     |
+| `packages/contracts` | Shared TypeScript contracts consumed by both apps                                  |
+| `packages/database`  | Shared Drizzle ORM schema, client, and repositories                                |
+| `packages/email`     | Email transport (nodemailer) + Handlebars HTML templates                            |
+| `packages/proto`     | Shared Protobuf definitions and TypeScript interfaces for gRPC                     |
+| `packages/queues`    | Shared BullMQ and RabbitMQ helpers consumed by both apps                           |
 
 ---
 
@@ -33,10 +35,10 @@ graph TD
 
     Browser -->|"HTTP :80"| Traefik
 
-    Traefik -->|"PathPrefix /api/auth\nno JWT check"| Auth
-    Traefik -->|"PathPrefix /api\nforwardAuth"| API
+    Traefik -->|"PathPrefix /api/v1/auth\nno JWT check"| Auth
+    Traefik -->|"PathPrefix /api/v1\nforwardAuth"| API
     Traefik -->|"PathPrefix /\ncatch-all"| SSR
-    Traefik -.->|"forwardAuth\nGET /api/auth/verify"| Auth
+    Traefik -.->|"forwardAuth\nGET /api/v1/auth/verify"| Auth
 
     SSR -->|"SSR fetch\nAUTH_SERVICE_URL"| Auth
     SSR -->|"SSR fetch\nAPI_URL"| API
@@ -49,7 +51,7 @@ graph TD
     API --> Rabbit
 ```
 
-Traefik determines route priority by rule length — `PathPrefix('/api/auth')` (longer) wins over `PathPrefix('/api')` automatically, so auth routes are never gated by the JWT middleware.
+All routes are versioned under `/api/v1`. Traefik determines route priority by rule length — `PathPrefix('/api/v1/auth')` (longer) wins over `PathPrefix('/api/v1')` automatically, so auth routes are never gated by the JWT middleware.
 
 ### Auth Request Flow
 
@@ -66,14 +68,14 @@ sequenceDiagram
 
     User->>Web: POST /auth (credentials)
     Note over Web,Auth: SSR calls auth directly (AUTH_SERVICE_URL),<br/>bypassing Traefik
-    Web->>Auth: POST /api/auth/login
-    Auth-->>Web: { accessToken, user }
+    Web->>Auth: POST /api/v1/auth/login
+    Auth-->>Web: { accessToken, refreshToken, user }
     Web-->>User: Set-Cookie __auth → redirect /
 
-    User->>Traefik: GET /api/projects  Authorization: Bearer <token>
-    Traefik->>Auth: GET /api/auth/verify  (forwardAuth)
+    User->>Traefik: GET /api/v1/projects  Authorization: Bearer <token>
+    Traefik->>Auth: GET /api/v1/auth/verify  (forwardAuth)
     Auth-->>Traefik: 200  X-User-Id · X-User-Email · X-User-Username
-    Traefik->>API: GET /api/projects  (+ X-User-* headers forwarded)
+    Traefik->>API: GET /api/v1/projects  (+ X-User-* headers forwarded)
     API-->>Traefik: 200 { items }
     Traefik-->>User: 200 { items }
 ```
@@ -89,10 +91,12 @@ graph LR
     end
 
     subgraph packages
+        Cache["@monorepo/cache"]
         Config["@monorepo/config"]
         Contracts["@monorepo/contracts"]
         Constants["@monorepo/constants"]
         Database["@monorepo/database"]
+        Email["@monorepo/email"]
         Proto["@monorepo/proto"]
         Queues["@monorepo/queues"]
     end
@@ -103,7 +107,9 @@ graph LR
     Web --> Queues
 
     AuthApp --> Config
+    AuthApp --> Constants
     AuthApp --> Database
+    AuthApp --> Email
     AuthApp --> Proto
 
     APIApp --> Config
@@ -116,17 +122,18 @@ graph LR
 
 ### Service Ports
 
-| Service           | Port   | Notes                                                |
-| ----------------- | ------ | ---------------------------------------------------- |
-| Traefik           | `80`   | Single ingress for browser traffic                   |
-| Traefik dashboard | `8080` | Dev only                                             |
-| apps/web          | `5173` | Also served through Traefik at `/`                   |
-| apps/auth         | `3002` | Also served through Traefik at `/api/auth`           |
-| apps/auth gRPC    | `5001` | Internal gRPC server, consumed by apps/api           |
-| apps/api          | `3001` | Also served through Traefik at `/api` (JWT required) |
-| PostgreSQL        | `5432` | Shared by auth and api                               |
-| Redis             | `6379` | BullMQ job queue (api only)                          |
-| RabbitMQ          | `5672` | Message broker (`15672` management UI)               |
+| Service           | Port   | Notes                                                   |
+| ----------------- | ------ | ------------------------------------------------------- |
+| Traefik           | `80`   | Single ingress for browser traffic                      |
+| Traefik dashboard | `8080` | Dev only                                                |
+| apps/web          | `5173` | Also served through Traefik at `/`                      |
+| apps/auth         | `3002` | Also served through Traefik at `/api/v1/auth`           |
+| apps/auth gRPC    | `5001` | Internal gRPC server, consumed by apps/api              |
+| apps/api          | `3001` | Also served through Traefik at `/api/v1` (JWT required) |
+| PostgreSQL        | `5432` | Shared by auth and api                                  |
+| Redis             | `6379` | BullMQ queues (auth email + api jobs)                   |
+| RabbitMQ          | `5672` | Message broker (`15672` management UI)                  |
+| MailDev           | `1080` | Dev email UI (`1025` SMTP)                              |
 
 ---
 
@@ -176,6 +183,7 @@ Services started:
 | postgres  | `localhost:5432`                 |
 | redis     | `localhost:6379`                 |
 | rabbitmq  | `localhost:5672` · management <http://localhost:15672> |
+| maildev   | <http://localhost:1080> (email UI) · SMTP `localhost:1025` |
 
 Stop the stack:
 
@@ -241,12 +249,12 @@ App URLs:
 The SSR home route calls the Nest API health endpoint during its loader.
 
 - Health endpoint: <http://localhost:3001/health>
-- Projects endpoint: <http://localhost:3001/api/projects>
-- Queue status endpoint: <http://localhost:3001/api/projects/queue>
-- RabbitMQ status endpoint: <http://localhost:3001/api/rabbitmq>
-- RabbitMQ publish endpoint: `POST /api/rabbitmq/projects/sync`
+- Projects endpoint: <http://localhost:3001/api/v1/projects>
+- Queue status endpoint: <http://localhost:3001/api/v1/projects/queue>
+- RabbitMQ status endpoint: <http://localhost:3001/api/v1/rabbitmq>
+- RabbitMQ publish endpoint: `POST /api/v1/rabbitmq/projects/sync`
 - Optional server-side override: set `API_URL` before starting the web app
-- Optional shared env values: `WEB_PORT`, `API_PORT`, `WEB_URL`, `API_URL`, `PUBLIC_API_BASE_PATH`, `AUTH_DATABASE_URL`, `API_DATABASE_URL`, `REDIS_URL`, `RABBITMQ_URL`, `BULLMQ_ENABLED`, `RABBITMQ_ENABLED`, `BULLMQ_PREFIX`, `AUTH_PORT`, `AUTH_GRPC_PORT`, `AUTH_GRPC_URL`
+- Optional shared env values: `WEB_PORT`, `API_PORT`, `WEB_URL`, `API_URL`, `PUBLIC_API_BASE_PATH`, `AUTH_DATABASE_URL`, `API_DATABASE_URL`, `REDIS_URL`, `RABBITMQ_URL`, `BULLMQ_ENABLED`, `RABBITMQ_ENABLED`, `BULLMQ_PREFIX`, `AUTH_PORT`, `AUTH_GRPC_PORT`, `AUTH_GRPC_URL`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`
 - Shared response type: `ApiHealth` from `@monorepo/contracts`
 
 Example:
@@ -266,14 +274,15 @@ The shared config package exports helpers used by both apps:
 
 Drizzle usage in this starter:
 
-- `packages/database` is split into two sub-path exports — `@monorepo/database/auth` (users schema + repository, `monorepo_auth` database) and `@monorepo/database/api` (projects schema + repository, `monorepo_api` database)
+- `packages/database` is split into two sub-path exports — `@monorepo/database/auth` (users, refresh_tokens, verification_tokens, audit_logs schema + repositories, `monorepo_auth` database) and `@monorepo/database/api` (projects schema + repository, `monorepo_api` database)
 - Each service uses its own dedicated Drizzle client and migration folder (`drizzle/auth/` and `drizzle/api/`)
 - The projects endpoint is backed by Drizzle and seeds default rows if the table is empty
 
 BullMQ usage in this starter:
 
 - The web app can enqueue a projects sync job from the SSR route through `@monorepo/queues/bullmq`
-- The API app uses `@nestjs/bullmq` for the worker integration and exposes queue status at `/api/projects/queue`
+- The API app uses `@nestjs/bullmq` for the worker integration and exposes queue status at `/api/v1/projects/queue`
+- The auth app uses `@nestjs/bullmq` for async email sending with 5 retries (exponential backoff)
 - Queue names, BullMQ retry/backoff defaults, cleanup policy, and worker event names live in `@monorepo/constants`
 
 RabbitMQ usage in this starter:
@@ -281,7 +290,7 @@ RabbitMQ usage in this starter:
 - The shared `@monorepo/queues/rabbitmq` entrypoint still exposes low-level helpers for non-Nest consumers or publishers
 - The API app itself now uses Nest microservices transport for RabbitMQ
 - The sample consumer is implemented with `@MessagePattern('projects.sync')`
-- The sample publisher endpoint at `POST /api/rabbitmq/projects/sync` publishes through Nest `ClientProxy`
+- The sample publisher endpoint at `POST /api/v1/rabbitmq/projects/sync` publishes through Nest `ClientProxy`
 - Queue and pattern defaults live in `@monorepo/constants`
 
 gRPC usage in this starter:

@@ -200,6 +200,11 @@ CREATE TABLE users (
   email TEXT UNIQUE NOT NULL,       -- User email
   username TEXT UNIQUE NOT NULL,    -- Handle (min 3 chars)
   password_hash TEXT NOT NULL,      -- bcrypt hash (12 rounds)
+  role TEXT DEFAULT 'user',         -- ENUM: 'admin', 'user'
+  email_verified BOOLEAN DEFAULT false, -- Email verification status
+  display_name TEXT,                -- User's display name (optional)
+  avatar_url TEXT,                  -- Avatar URL (optional)
+  bio TEXT,                         -- User bio (optional)
   created_at TIMESTAMP NOT NULL,    -- Auto-generated
   updated_at TIMESTAMP NOT NULL     -- Auto-updated
 );
@@ -209,7 +214,7 @@ CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_username ON users(username);
 ```
 
-**Purpose**: User credentials and profile data for authentication.
+**Purpose**: User credentials, profile data, and verification status for authentication.
 
 **refresh_tokens table**
 ```sql
@@ -227,6 +232,43 @@ CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens(user_id);
 ```
 
 **Purpose**: Refresh token storage for token rotation. Raw tokens are never stored — only SHA-256 hashes.
+
+**verification_tokens table**
+```sql
+CREATE TABLE verification_tokens (
+  id TEXT PRIMARY KEY,              -- UUID v4
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token_hash TEXT UNIQUE NOT NULL,  -- SHA-256 hash of raw token
+  token_type TEXT NOT NULL,         -- ENUM: 'email_verify', 'password_reset'
+  expires_at TIMESTAMPTZ NOT NULL,  -- Expiry varies by type
+  created_at TIMESTAMPTZ NOT NULL   -- Auto-generated
+);
+
+CREATE INDEX idx_verification_tokens_token_hash ON verification_tokens(token_hash);
+CREATE INDEX idx_verification_tokens_user_id_type ON verification_tokens(user_id, token_type);
+```
+
+**Purpose**: Email verification and password reset tokens (shared table, differentiated by token_type).
+
+**audit_logs table**
+```sql
+CREATE TABLE audit_logs (
+  id TEXT PRIMARY KEY,              -- UUID v4
+  user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+  action TEXT NOT NULL,             -- e.g., 'register', 'login', 'logout', 'profile_update'
+  resource TEXT NOT NULL,           -- e.g., 'auth', 'projects'
+  ip TEXT,                          -- Client IP address
+  user_agent TEXT,                  -- Client user-agent
+  metadata JSONB,                   -- Additional context (email, etc.)
+  created_at TIMESTAMPTZ NOT NULL   -- Auto-generated
+);
+
+CREATE INDEX idx_audit_logs_user_id ON audit_logs(user_id);
+CREATE INDEX idx_audit_logs_action ON audit_logs(action);
+CREATE INDEX idx_audit_logs_created_at ON audit_logs(created_at);
+```
+
+**Purpose**: Request audit trail for security and compliance.
 
 ---
 
@@ -277,37 +319,35 @@ const projectsRepo = createProjectsRepository(apiDb);
 
 ### BullMQ (Job Queue)
 
-**Purpose**: Reliable background job processing with retries.
+**Purpose**: Reliable background job processing with retries for both API and Auth services.
 
-**Topology**:
-```
-Web App          →  Enqueue  →  Redis
-                                 (queue: 'projects')
-                                        │
-                                        ▼
-API Worker  ←─────  Fetch Job  ←─────┘
-   │
-   ├─ Process job
-   │
-   └─→ Mark complete/failed
-       (keep 100 completed/failed)
-```
+**Auth Service Queues**:
+- `email`: Async email sending (verification, password reset, welcome). 5 retries with exponential backoff.
+
+**API Service Queues**:
+- `projects`: Project synchronization and cleanup.
 
 **Configuration**:
 ```typescript
-const queue = {
-  name: 'projects',
-  attempts: 3,
+const defaultQueueConfig = {
+  attempts: 5,                        // Email: 5 retries
   backoff: {
     type: 'exponential',
-    delay: 5000  // 5s base delay: 5s, 10s, 20s
+    delay: 5000                       // 5s base: 5s, 10s, 20s, 40s, 80s
   },
   removeOnComplete: { age: 3600 },    // Keep 1 hour
   removeOnFail: { age: 86400 },       // Keep 24 hours
 };
 ```
 
-**Job Result**: Stored temporarily before cleanup.
+**Topology**:
+```
+Services      →  Enqueue  →  Redis (with BULLMQ_PREFIX='monorepo')
+                              queue: 'email' or 'projects'
+                                     │
+                                     ▼
+Processors  ←─  Fetch Job  ←────────┘
+```
 
 ---
 
@@ -343,6 +383,18 @@ Durable: true
   requestedAt: ISO8601 timestamp
 }
 ```
+
+---
+
+## Scheduled Tasks (Cron Jobs)
+
+**Auth Service (daily at 3 AM UTC)**:
+- Clean up expired refresh tokens
+- Clean up expired verification tokens
+- Archive audit logs older than 90 days
+
+**API Service (daily at 4 AM UTC)**:
+- Clean up old completed/failed BullMQ jobs
 
 ---
 
@@ -570,12 +622,16 @@ REDIS_URL=redis://...
 RABBITMQ_URL=amqp://...
 BULLMQ_ENABLED=true
 RABBITMQ_ENABLED=true
+BULLMQ_PREFIX=monorepo
 ```
 
 **Auth Only**:
 ```
 JWT_SECRET=<32+ char secret>
-JWT_EXPIRY=15m (access token), 30d (refresh token)
+SMTP_HOST=maildev|smtp.example.com
+SMTP_PORT=1025 (dev), 587 (prod)
+SMTP_SECURE=false (dev), true (prod)
+SMTP_FROM=noreply@example.com
 ```
 
 **Web Only**:
@@ -647,10 +703,44 @@ const tokenHash = createHash('sha256').update(rawToken).digest('hex');
 5. New access token + new refresh token issued
 6. Client stores new pair
 
-**Endpoints**:
-- `POST /api/auth/refresh` — exchange refresh token for new pair
-- `POST /api/auth/logout` — revoke single refresh token
-- `POST /api/auth/logout-all` — revoke all user refresh tokens (requires JWT)
+**Auth Endpoints** (all prefixed with `/api/v1/auth`):
+
+Public (no JWT):
+- `POST /register` — register with email, username, password
+- `POST /login` — login with email/username + password
+- `POST /refresh` — exchange refresh token for new pair
+- `POST /logout` — revoke single refresh token
+- `POST /verify-email` — verify email with token
+- `POST /resend-verification` — resend verification email (requires JWT)
+- `POST /forgot-password` — request password reset email
+- `POST /reset-password` — reset password with token
+- `GET /verify` — Traefik forwardAuth endpoint (requires JWT)
+- `GET /health` — health check
+
+Protected (requires JWT):
+- `GET /profile` — get current user profile
+- `PATCH /profile` — update profile (displayName, avatarUrl, bio)
+- `GET /me` — get current user details
+- `POST /logout-all` — revoke all refresh tokens
+
+### API Versioning
+
+All API routes use the `/api/v1` prefix to support future versioning:
+
+```
+Auth Service: /api/v1/auth/*
+API Service:  /api/v1/*
+```
+
+**Excluded from versioning**:
+- Health checks: `/health` (internal only)
+- Swagger/OpenAPI docs: `/docs`, `/api-json` (dev only)
+
+**Future versions** (when needed):
+```
+/api/v2/auth/*
+/api/v2/*
+```
 
 ### HTTPS & TLS
 
@@ -695,16 +785,42 @@ Scale strategy: 10 connections × (number of API instances) < PostgreSQL max_con
 
 ---
 
+## Rate Limiting
+
+Global and endpoint-specific rate limits prevent abuse:
+
+| Endpoint | Limit | Window |
+| --- | --- | --- |
+| Auth: Global | 10 requests | 60 seconds |
+| Auth: `/register` | 5 requests | 60 seconds |
+| Auth: `/login` | 5 requests | 60 seconds |
+| Auth: `/refresh` | 10 requests | 60 seconds |
+| Auth: `/verify-email` | 5 requests | 60 seconds |
+| Auth: `/resend-verification` | 3 requests | 60 seconds |
+| Auth: `/forgot-password` | 3 requests | 60 seconds |
+| API: Global | 20 requests | 60 seconds |
+
+Rate limit errors return `429 Too Many Requests`.
+
+---
+
 ## Monitoring & Observability
 
 ### Health Checks
 
-```typescript
-// API Service
-GET /health → 200 OK { status: 'up' }
-
-// Used by Traefik for load balancing
+**Auth Service**:
 ```
+GET /api/v1/auth/health → 200 OK
+Checks: PostgreSQL connection
+```
+
+**API Service**:
+```
+GET /api/v1/health → 200 OK
+Checks: PostgreSQL, Redis, RabbitMQ connections
+```
+
+Used by Traefik for load balancing and container orchestration.
 
 ### Logging
 

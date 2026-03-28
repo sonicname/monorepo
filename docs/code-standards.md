@@ -620,9 +620,9 @@ app.enableCors({
 **Required** (must be set):
 ```
 NODE_ENV (development|production)
-DATABASE_URL
+AUTH_DATABASE_URL
+API_DATABASE_URL
 JWT_SECRET
-SESSION_SECRET
 ```
 
 **Optional** (has defaults):
@@ -630,8 +630,19 @@ SESSION_SECRET
 API_PORT (default: 3001)
 AUTH_PORT (default: 3002)
 WEB_PORT (default: 5173)
+REDIS_URL (required if BULLMQ_ENABLED or email queue)
+RABBITMQ_URL (required if RABBITMQ_ENABLED)
 BULLMQ_ENABLED (default: true)
 RABBITMQ_ENABLED (default: true)
+BULLMQ_PREFIX (default: monorepo)
+```
+
+**Auth-Specific** (email & verification):
+```
+SMTP_HOST (required for email sending)
+SMTP_PORT (default: 587)
+SMTP_SECURE (default: true)
+SMTP_FROM (required for email sending)
 ```
 
 ### Validation
