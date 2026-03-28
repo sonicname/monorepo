@@ -7,7 +7,7 @@ import { RabbitMqService } from './rabbitmq.service';
 
 @ApiTags('RabbitMQ')
 @Public()
-@Controller('api/rabbitmq')
+@Controller('rabbitmq')
 export class RabbitMqController {
   constructor(
     private readonly rabbitMqService: RabbitMqService,

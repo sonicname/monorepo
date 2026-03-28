@@ -6,7 +6,7 @@ import { ProjectsService } from './projects.service';
 
 @ApiTags('Projects')
 @Public()
-@Controller('api/projects')
+@Controller('projects')
 export class ProjectsController {
   constructor(
     private readonly projectsService: ProjectsService,

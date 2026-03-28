@@ -104,12 +104,12 @@ services:
       - pnpm-store:/pnpm/store
     labels:
       - traefik.enable=true
-      # Route /api/auth/* to the auth service (no JWT middleware — login/register are public)
-      - traefik.http.routers.auth.rule=PathPrefix(`/api/auth`)
+      # Route /api/v1/auth/* to the auth service (no JWT middleware — login/register are public)
+      - traefik.http.routers.auth.rule=PathPrefix(`/api/v1/auth`)
       - traefik.http.routers.auth.entrypoints=web
       - traefik.http.services.auth.loadbalancer.server.port=3002
       # Define the forwardAuth middleware here so it can be referenced by other routers
-      - traefik.http.middlewares.jwt-verify.forwardauth.address=http://auth:3002/api/auth/verify
+      - traefik.http.middlewares.jwt-verify.forwardauth.address=http://auth:3002/api/v1/auth/verify
       - traefik.http.middlewares.jwt-verify.forwardauth.authResponseHeaders=X-User-Id,X-User-Email,X-User-Username,X-User-Role
 
   api:
@@ -128,7 +128,7 @@ services:
       API_URL: http://api:3001
       WEB_PORT: '5173'
       WEB_URL: http://web:5173
-      PUBLIC_API_BASE_PATH: /api
+      PUBLIC_API_BASE_PATH: /api/v1
       API_DATABASE_URL: postgresql://postgres:postgres@postgres:5432/monorepo_api
       BULLMQ_ENABLED: 'true'
       REDIS_URL: redis://redis:6379
@@ -149,8 +149,8 @@ services:
       - pnpm-store:/pnpm/store
     labels:
       - traefik.enable=true
-      # Route /api/* to the api service, protected by JWT via forwardAuth
-      - traefik.http.routers.api.rule=PathPrefix(`/api`)
+      # Route /api/v1/* to the api service, protected by JWT via forwardAuth
+      - traefik.http.routers.api.rule=PathPrefix(`/api/v1`)
       - traefik.http.routers.api.entrypoints=web
       - traefik.http.routers.api.middlewares=jwt-verify
       - traefik.http.services.api.loadbalancer.server.port=3001
@@ -167,7 +167,7 @@ services:
       WEB_URL: http://web:5173
       API_PORT: '3001'
       API_URL: http://api:3001
-      PUBLIC_API_BASE_PATH: /api
+      PUBLIC_API_BASE_PATH: /api/v1
       BULLMQ_ENABLED: 'true'
       REDIS_URL: redis://redis:6379
       RABBITMQ_ENABLED: 'true'

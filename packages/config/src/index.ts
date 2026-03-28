@@ -7,7 +7,7 @@ const DEFAULT_PROTOCOL = 'http';
 const DEFAULT_HOST = '127.0.0.1';
 const DEFAULT_WEB_PORT = 5173;
 const DEFAULT_API_PORT = 3001;
-const DEFAULT_PUBLIC_API_BASE_PATH = '/api';
+const DEFAULT_PUBLIC_API_BASE_PATH = '/api/v1';
 const DEFAULT_DATABASE_URL =
   'postgresql://postgres:postgres@127.0.0.1:5432/monorepo';
 const DEFAULT_AUTH_DATABASE_URL =

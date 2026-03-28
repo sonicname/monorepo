@@ -21,7 +21,7 @@ import { UpdateProfileDto } from './update-profile.dto';
 @ApiTags('Profile')
 @ApiBearerAuth()
 @ApiUnauthorizedResponse({ description: 'Invalid or missing JWT' })
-@Controller('api/profile')
+@Controller('profile')
 export class ProfileController {
   constructor(private readonly authGrpcService: AuthGrpcService) {}
 
