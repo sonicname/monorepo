@@ -1,6 +1,8 @@
 import { validateRuntimeEnv } from '@monorepo/config';
+import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { RuntimeConfigService } from './config/runtime-config.service';
 import { AuditModule } from './audit/audit.module';
 import { AuthGrpcModule } from './auth-grpc/auth-grpc.module';
 import { AuthModule } from './auth/auth.module';
@@ -23,6 +25,12 @@ const validateConfig = validateRuntimeEnv as unknown as (
       validate: validateConfig,
     }),
     RuntimeConfigModule,
+    BullModule.forRootAsync({
+      inject: [RuntimeConfigService],
+      useFactory: (config: RuntimeConfigService) => ({
+        connection: config.getBullMqConnection(),
+      }),
+    }) as never,
     DatabaseModule,
     AuditModule,
     EmailModule,

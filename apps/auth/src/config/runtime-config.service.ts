@@ -1,8 +1,10 @@
 import {
   getAuthDatabaseUrl,
   getAuthGrpcPort,
+  getRedisUrl,
   type RuntimeEnv,
 } from '@monorepo/config';
+import type { ConnectionOptions } from 'bullmq';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
@@ -44,5 +46,32 @@ export class RuntimeConfigService {
 
   getAuthGrpcBindUrl(): string {
     return `0.0.0.0:${this.getAuthGrpcPort()}`;
+  }
+
+  getRedisRuntimeEnv(): RuntimeEnv {
+    return {
+      REDIS_URL: this.configService.get<unknown>('REDIS_URL'),
+    };
+  }
+
+  getRedisUrl(): string {
+    return getRedisUrl(this.getRedisRuntimeEnv());
+  }
+
+  getBullMqConnection(): ConnectionOptions {
+    const url = new URL(this.getRedisUrl());
+    const usesTls = url.protocol === 'rediss:';
+    const dbPath = url.pathname.replace('/', '');
+    const db = dbPath ? Number(dbPath) : undefined;
+
+    return {
+      host: url.hostname,
+      port: Number(url.port || (usesTls ? 6380 : 6379)),
+      username: url.username || undefined,
+      password: url.password || undefined,
+      db: Number.isInteger(db) ? db : undefined,
+      tls: usesTls ? {} : undefined,
+      maxRetriesPerRequest: null,
+    };
   }
 }

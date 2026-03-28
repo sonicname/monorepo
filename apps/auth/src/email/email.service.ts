@@ -1,11 +1,18 @@
 import {
+  EMAIL_QUEUE_DEFAULT_JOB_OPTIONS,
+  EMAIL_QUEUE_NAME,
+  EMAIL_SEND_JOB_NAME,
+  type EmailJobData,
+} from '@monorepo/constants';
+import {
   createEmailTransport,
   getEmailConfig,
-  sendEmail,
   type SendEmailOptions,
 } from '@monorepo/email';
+import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Queue } from 'bullmq';
 import type { Transporter } from 'nodemailer';
 import type SMTPTransport from 'nodemailer/lib/smtp-transport';
 
@@ -15,7 +22,11 @@ export class EmailService implements OnModuleInit {
   private transporter!: Transporter<SMTPTransport.SentMessageInfo>;
   private from!: string;
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    @InjectQueue(EMAIL_QUEUE_NAME)
+    private readonly emailQueue: Queue<EmailJobData>,
+  ) {}
 
   onModuleInit() {
     const config = getEmailConfig({
@@ -32,15 +43,29 @@ export class EmailService implements OnModuleInit {
     this.logger.log(`Email transport configured: ${config.host}:${config.port}`);
   }
 
+  /** Enqueue an email job for async processing with retries. */
   async send(options: SendEmailOptions): Promise<void> {
-    try {
-      await sendEmail(this.transporter, this.from, options);
-      this.logger.log(`Email sent to ${options.to}: ${options.subject}`);
-    } catch (error) {
-      this.logger.error(
-        `Failed to send email to ${options.to}: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      );
-      throw error;
-    }
+    await this.emailQueue.add(
+      EMAIL_SEND_JOB_NAME,
+      {
+        to: options.to,
+        subject: options.subject,
+        html: options.html ?? '',
+        text: options.text,
+      },
+      EMAIL_QUEUE_DEFAULT_JOB_OPTIONS,
+    );
+
+    this.logger.log(`Email queued for ${options.to}: ${options.subject}`);
+  }
+
+  /** Used by the queue processor to access the configured transporter. */
+  getTransporter(): Transporter<SMTPTransport.SentMessageInfo> {
+    return this.transporter;
+  }
+
+  /** Used by the queue processor to access the configured from address. */
+  getFrom(): string {
+    return this.from;
   }
 }

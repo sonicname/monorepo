@@ -150,6 +150,9 @@ importers:
       '@monorepo/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@monorepo/constants':
+        specifier: workspace:*
+        version: link:../../packages/constants
       '@monorepo/database':
         specifier: workspace:*
         version: link:../../packages/database
@@ -159,6 +162,9 @@ importers:
       '@monorepo/proto':
         specifier: workspace:*
         version: link:../../packages/proto
+      '@nestjs/bullmq':
+        specifier: ^11.0.4
+        version: 11.0.4(@nestjs/common@11.1.17(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.17)(bullmq@5.71.0)
       '@nestjs/common':
         specifier: ^11.0.1
         version: 11.1.17(class-transformer@0.5.1)(class-validator@0.15.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -195,6 +201,9 @@ importers:
       bcryptjs:
         specifier: ^2.4.3
         version: 2.4.3
+      bullmq:
+        specifier: ^5.71.0
+        version: 5.71.0
       class-transformer:
         specifier: ^0.5.1
         version: 0.5.1
@@ -368,6 +377,9 @@ importers:
       '@monorepo/config':
         specifier: workspace:*
         version: link:../config
+      handlebars:
+        specifier: ^4.7.9
+        version: 4.7.9
       nodemailer:
         specifier: ^6.10.1
         version: 6.10.1
@@ -3262,6 +3274,11 @@ packages:
 
   handlebars@4.7.8:
     resolution: {integrity: sha512-vafaFqs8MZkRrSX7sFVUdo3ap/eNiLnb4IakshzvP56X5Nr1iGKAIqdX6tMlm6HcNRIkr6AxO5jFEoJzzpT8aQ==}
+    engines: {node: '>=0.4.7'}
+    hasBin: true
+
+  handlebars@4.7.9:
+    resolution: {integrity: sha512-4E71E0rpOaQuJR2A3xDZ+GM1HyWYv1clR58tC8emQNeQe3RH7MAzSbat+V0wG78LQBo6m6bzSG/L4pBuCsgnUQ==}
     engines: {node: '>=0.4.7'}
     hasBin: true
 
@@ -7540,6 +7557,15 @@ snapshots:
   graceful-fs@4.2.11: {}
 
   handlebars@4.7.8:
+    dependencies:
+      minimist: 1.2.8
+      neo-async: 2.6.2
+      source-map: 0.6.1
+      wordwrap: 1.0.0
+    optionalDependencies:
+      uglify-js: 3.19.3
+
+  handlebars@4.7.9:
     dependencies:
       minimist: 1.2.8
       neo-async: 2.6.2
