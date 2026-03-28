@@ -25,6 +25,10 @@ export class DatabaseService implements OnApplicationShutdown {
     return this.instance.db;
   }
 
+  async ping(): Promise<void> {
+    await this.instance.client`SELECT 1`;
+  }
+
   async onApplicationShutdown() {
     await closeApiDatabase(this.instance);
   }

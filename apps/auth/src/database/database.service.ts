@@ -26,6 +26,10 @@ export class DatabaseService implements OnApplicationShutdown {
     );
   }
 
+  async ping(): Promise<void> {
+    await this.instance.client`SELECT 1`;
+  }
+
   async onApplicationShutdown() {
     await closeAuthDatabase(this.instance);
   }

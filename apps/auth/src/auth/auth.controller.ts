@@ -13,8 +13,10 @@ import {
   ApiBearerAuth,
   ApiOperation,
   ApiTags,
+  ApiTooManyRequestsResponse,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import type { Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -33,6 +35,8 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @ApiOperation({ summary: 'Register a new user' })
+  @ApiTooManyRequestsResponse({ description: 'Rate limit exceeded' })
+  @Throttle({ short: { ttl: 60_000, limit: 5 } })
   @Post('register')
   register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
@@ -40,6 +44,8 @@ export class AuthController {
 
   @ApiOperation({ summary: 'Login with email and password' })
   @ApiUnauthorizedResponse({ description: 'Invalid credentials' })
+  @ApiTooManyRequestsResponse({ description: 'Rate limit exceeded' })
+  @Throttle({ short: { ttl: 60_000, limit: 5 } })
   @Post('login')
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
@@ -47,6 +53,8 @@ export class AuthController {
 
   @ApiOperation({ summary: 'Refresh access token using a refresh token' })
   @ApiUnauthorizedResponse({ description: 'Invalid or expired refresh token' })
+  @ApiTooManyRequestsResponse({ description: 'Rate limit exceeded' })
+  @Throttle({ short: { ttl: 60_000, limit: 10 } })
   @Post('refresh')
   @HttpCode(200)
   refresh(@Body() dto: RefreshTokenDto) {

@@ -1,17 +1,6 @@
-import { Controller, Get } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { AppService } from './app.service';
-import { Public } from './auth/public.decorator';
+import { Controller } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 
-@ApiTags('Health')
+@ApiTags('App')
 @Controller()
-export class AppController {
-  constructor(private readonly appService: AppService) {}
-
-  @ApiOperation({ summary: 'Health check' })
-  @Public()
-  @Get('health')
-  getHealth() {
-    return this.appService.getHealth();
-  }
-}
+export class AppController {}

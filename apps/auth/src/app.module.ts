@@ -6,6 +6,8 @@ import { AuthModule } from './auth/auth.module';
 import { RuntimeConfigModule } from './config/runtime-config.module';
 import { CronModule } from './cron/cron.module';
 import { DatabaseModule } from './database/database.module';
+import { HealthModule } from './health/health.module';
+import { ThrottleModule } from './throttle/throttle.module';
 
 const validateConfig = validateRuntimeEnv as unknown as (
   config: Record<string, unknown>,
@@ -23,6 +25,8 @@ const validateConfig = validateRuntimeEnv as unknown as (
     AuthModule,
     AuthGrpcModule,
     CronModule,
+    HealthModule,
+    ThrottleModule,
   ],
 })
 export class AppModule {}
