@@ -53,7 +53,7 @@ pnpm gen:package <name> [--dep pkg@ver] [--workspace-dep name] [--export subpath
 
 ### Apps
 
-- **`apps/web`** — React Router v7 with SSR (Vite, Tailwind v4). Module: `ES2022`/`bundler`. Path alias `~/*` → `./app/*`.
+- **`apps/web`** — React Router v7 with SSR (Vite, Tailwind v4) using `modules-page-routing` for file-based module routing. Module: `ES2022`/`bundler`. Path alias `~/*` → `./app/*`. Routes auto-generated from `app/modules/**/pages/**/*.tsx` structure.
 - **`apps/auth`** — NestJS auth microservice. HTTP on `:3002`, gRPC server on `:5001`. Handles registration, login, email verification, password reset, JWT issuance (15m access + 30d refresh with rotation), token verification, user profile management (displayName, avatarUrl, bio), logout, and async email sending via BullMQ. Rate limiting, health checks, request audit trail. Reads `AUTH_DATABASE_URL` → `monorepo_auth` database. Uses Redis for email queue and cache.
 - **`apps/api`** — NestJS API server on `:3001`. Uses BullMQ (Redis), RabbitMQ, gRPC client to auth. Reads `API_DATABASE_URL` → `monorepo_api` database. Protected by Traefik forwardAuth (JWT verified by auth service, user info forwarded as `X-User-*` headers).
 

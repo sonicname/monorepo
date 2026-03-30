@@ -111,6 +111,37 @@ export class JwtAuthGuard { }
 export class ProjectsService { }
 ```
 
+### Web App Route Files (apps/web)
+
+Web app uses **modules-page-routing** with file-based routing. Route files are TSX components in `modules/**/pages/` directory.
+
+**File naming conventions**:
+- `index.tsx` — Index/default route (e.g., `/auth` for `auth/pages/index.tsx`)
+- `_layout.tsx` — Layout component (grouped with pages, optional)
+- `[param].tsx` — Dynamic route parameter (e.g., `/post/123` for `post/pages/[id].tsx`)
+- `_not-found.tsx` — 404 fallback route
+
+**Examples**:
+```
+modules/
+├── __root.tsx                    # Root layout (shared for all routes)
+├── __homepage.tsx               # Home route (/)
+├── auth/
+│   └── pages/
+│       ├── index.tsx            # /auth
+│       └── logout.tsx           # /auth/logout
+└── admin/
+    └── pages/
+        └── index.tsx            # /admin
+```
+
+**URL mapping**:
+- `modules/__homepage.tsx` → `/`
+- `modules/__root.tsx` → Root layout (shared)
+- `modules/auth/pages/index.tsx` → `/auth`
+- `modules/auth/pages/logout.tsx` → `/auth/logout`
+- `modules/admin/pages/index.tsx` → `/admin`
+
 ### Constants
 - Use **SCREAMING_SNAKE_CASE** for top-level constants
 - Use **camelCase** for configuration objects

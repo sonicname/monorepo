@@ -66,6 +66,7 @@ The monorepo provides a production-ready boilerplate for full-stack JavaScript/T
 
 #### M1.5: Frontend (COMPLETE)
 - ✓ React Router v7 SSR
+- ✓ File-based module routing via `modules-page-routing`
 - ✓ Home and auth routes
 - ✓ Data loaders
 - ✓ Session management

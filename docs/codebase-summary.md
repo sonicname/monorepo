@@ -121,26 +121,30 @@ JWT_EXPIRY=7d
 
 ### apps/web — React Router v7 SSR Frontend (Port 5173)
 
-**Purpose**: Server-side rendered frontend with authentication and data loading.
+**Purpose**: Server-side rendered frontend with authentication and data loading using file-based module routing.
 
 **Key Directories**:
-- `app/routes/` — Route components (home, auth)
-- `app/welcome/` — SVG assets (light/dark logos)
-- `app/lib/` — Session management
+- `app/modules/` — File-based routing (auto-generated routes from `**/ pages/**/*.tsx`)
+  - `__root.tsx` — Root layout component (shared for all routes)
+  - `__homepage.tsx` — Home route (index)
+  - `auth/pages/` — Auth routes
+  - `admin/pages/` — Admin routes
+- `app/lib/` — Session management, utilities
 - `public/` — Static assets
 
 **Main Files**:
-- `app/root.tsx` — Root layout component
-- `app/routes.ts` — Route definitions
+- `app/routes.ts` — Route configuration using `buildGlobRouteConfig` + `import.meta.glob`
 - `app/app.css` — Tailwind CSS styles (dark mode support)
 - `react-router.config.ts` — React Router configuration
 - `vite.config.ts` — Vite bundler configuration
 
-**Routes**:
-| Route | Type | Purpose |
+**Routes** (auto-generated from modules structure):
+| Route | File | Purpose |
 |-------|------|---------|
-| `/` | Home | Displays projects + queue status (authenticated) |
-| `/auth` | Auth | Login/register forms |
+| `/` | `modules/__homepage.tsx` | Home page with projects + queue status |
+| `/auth` | `modules/auth/pages/index.tsx` | Login/register forms |
+| `/auth/logout` | `modules/auth/pages/logout.tsx` | Logout endpoint |
+| `/admin` | `modules/admin/pages/index.tsx` | Admin dashboard |
 
 **Loaders**:
 - Home loader: Fetches `/health`, `/api/projects`, `/api/projects/queue` via Promise.allSettled

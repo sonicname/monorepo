@@ -52,11 +52,12 @@ A production-ready pnpm monorepo boilerplate demonstrating modern full-stack dev
 - **FR3.4** Job result persistence and cleanup (keep 100 completed/failed)
 
 ### FR4: Frontend
-- **FR4.1** Server-side rendering for SEO and performance
-- **FR4.2** Protected routes requiring authentication
-- **FR4.3** Home page with data loading (projects + queue status)
-- **FR4.4** Authentication pages (register/login)
-- **FR4.5** Dark mode support via Tailwind CSS
+- **FR4.1** Server-side rendering (SSR) for SEO and performance via React Router v7
+- **FR4.2** File-based module routing using `modules-page-routing` (routes auto-generated from `modules/**/pages/**/*.tsx`)
+- **FR4.3** Protected routes requiring authentication
+- **FR4.4** Home page with data loading (projects + queue status)
+- **FR4.5** Authentication pages (register/login)
+- **FR4.6** Dark mode support via Tailwind CSS
 
 ### FR5: Data Persistence
 - **FR5.1** Users table (auth database: `monorepo_auth`)

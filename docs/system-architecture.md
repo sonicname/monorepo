@@ -61,7 +61,7 @@ Comprehensive overview of system topology, data flow, authentication, and integr
 | **Traefik** | Ingress | Route HTTP, JWT validation via forwardAuth | 80, 8080 | N/A |
 | **Auth** | Microservice | User management, JWT generation, token verification | 3002 (HTTP), 5001 (gRPC) | N/A |
 | **API** | Microservice | Business logic, project management, queue coordination | 3001 | JWT required |
-| **Web** | Frontend | React Router SSR, user interface | 5173 (dev), 3000 (prod) | Cookie-based |
+| **Web** | Frontend | React Router v7 SSR with file-based module routing (`modules-page-routing`), user interface | 5173 (dev), 3000 (prod) | Cookie-based |
 
 ### Inter-Service Communication
 
