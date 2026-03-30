@@ -42,7 +42,9 @@ describe('RolesGuard', () => {
     });
 
     const request = {
-      user: userRole ? { id: 'u1', email: 'u@x.com', username: 'u1', role: userRole } : null,
+      user: userRole
+        ? { id: 'u1', email: 'u@x.com', username: 'u1', role: userRole }
+        : null,
     };
 
     return {

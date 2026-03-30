@@ -7,9 +7,10 @@ jest.mock('../config/runtime-config.service', () => ({
 }));
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { RuntimeConfigService } = require('../config/runtime-config.service') as {
-  RuntimeConfigService: new () => unknown;
-};
+const { RuntimeConfigService } =
+  require('../config/runtime-config.service') as {
+    RuntimeConfigService: new () => unknown;
+  };
 
 function makeMockRuntimeConfig(enabled: boolean) {
   return {
