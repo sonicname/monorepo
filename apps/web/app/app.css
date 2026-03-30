@@ -563,3 +563,51 @@ a {
 .auth-link:hover {
   text-decoration: underline;
 }
+
+/* ── Profile page ──────────────────────────────────────────── */
+
+.profile-card {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  max-width: 520px;
+  border: 1px solid var(--color-line);
+  border-radius: 28px;
+  background: rgba(255, 249, 241, 0.88);
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.1);
+  backdrop-filter: blur(18px);
+  padding: 2rem;
+}
+
+.profile-card::after {
+  content: '';
+  position: absolute;
+  inset: auto -4rem -4rem auto;
+  width: 14rem;
+  height: 14rem;
+  border-radius: 999px;
+  background: linear-gradient(
+    135deg,
+    rgba(217, 119, 6, 0.16),
+    rgba(154, 52, 18, 0.22)
+  );
+  pointer-events: none;
+}
+
+.profile-info {
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--color-line);
+}
+
+/* ── User bar (homepage) ───────────────────────────────────── */
+
+.user-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+  max-width: 1100px;
+  margin-left: auto;
+  margin-right: auto;
+}

@@ -175,6 +175,10 @@ export default function AuthPage() {
               <Link to='/auth?mode=register' className='auth-link'>
                 Create one
               </Link>
+              {' · '}
+              <Link to='/auth/forgot-password' className='auth-link'>
+                Forgot password?
+              </Link>
             </>
           )}
         </p>

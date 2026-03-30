@@ -166,6 +166,9 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             <span>
               {loaderData.user.username} ({loaderData.user.role})
             </span>
+            <Link to='/profile' className='auth-link'>
+              Profile
+            </Link>
             {loaderData.user.role === 'admin' && (
               <Link to='/admin' className='auth-link'>
                 Admin
