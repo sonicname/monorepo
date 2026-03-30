@@ -22,7 +22,8 @@ const mockProjectsRepository = {
 
 describe('ProjectsService', () => {
   let service: ProjectsService;
-  let databaseService: jest.Mocked<DatabaseService>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let databaseService: any;
 
   beforeEach(async () => {
     jest.clearAllMocks();
