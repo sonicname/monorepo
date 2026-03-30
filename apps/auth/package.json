@@ -10,7 +10,35 @@
     "dev": "nest start --watch",
     "start": "nest start",
     "start:prod": "node dist/main",
-    "typecheck": "tsc --noEmit -p tsconfig.json"
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:cov": "jest --coverage"
+  },
+  "jest": {
+    "moduleFileExtensions": ["js", "json", "ts"],
+    "rootDir": "src",
+    "testRegex": ".*\\.spec\\.ts$",
+    "transform": {
+      "^.+\\.(t|j)s$": ["ts-jest", {
+        "tsconfig": {
+          "module": "commonjs",
+          "moduleResolution": "node",
+          "resolvePackageJsonExports": false,
+          "esModuleInterop": true
+        },
+        "diagnostics": false
+      }]
+    },
+    "collectCoverageFrom": ["**/*.(t|j)s"],
+    "coverageDirectory": "../coverage",
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^@monorepo/database/auth$": "<rootDir>/__mocks__/monorepo-database-auth.ts",
+      "^@monorepo/database(/.*)?$": "<rootDir>/__mocks__/monorepo-database-auth.ts",
+      "^@monorepo/proto$": "<rootDir>/__mocks__/monorepo-proto.ts"
+    },
+    "transformIgnorePatterns": []
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.13.0",
@@ -45,11 +73,15 @@
   "devDependencies": {
     "@nestjs/cli": "^11.0.0",
     "@nestjs/schematics": "^11.0.0",
+    "@nestjs/testing": "^11.1.17",
     "@types/bcryptjs": "^2.4.6",
     "@types/express": "^5.0.0",
+    "@types/jest": "^30.0.0",
     "@types/node": "^22.10.7",
     "@types/nodemailer": "^7.0.11",
     "@types/passport-jwt": "^4.0.1",
+    "jest": "^30.3.0",
+    "ts-jest": "^29.4.6",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3"
   }
