@@ -3,11 +3,13 @@ import {
   getApiPort,
   getAuthGrpcUrl,
   getBullMqPrefix,
+  getMongoUrl,
   getProjectsQueueName,
   getRabbitMqUrl,
   getRedisUrl,
   getWebOrigin,
   isBullMqEnabled,
+  isMongoEnabled,
   isRabbitMqEnabled,
   maskConnectionUrl,
   type RuntimeEnv,
@@ -106,5 +108,24 @@ export class RuntimeConfigService {
 
   getAuthGrpcUrl() {
     return getAuthGrpcUrl(this.getAuthGrpcRuntimeEnv());
+  }
+
+  getMongoRuntimeEnv(): RuntimeEnv {
+    return {
+      MONGO_URL: this.configService.get<unknown>('MONGO_URL'),
+      MONGO_ENABLED: this.configService.get<unknown>('MONGO_ENABLED'),
+    };
+  }
+
+  isMongoEnabled() {
+    return isMongoEnabled(this.getMongoRuntimeEnv());
+  }
+
+  getMongoUrl() {
+    return getMongoUrl(this.getMongoRuntimeEnv());
+  }
+
+  getMaskedMongoUrl() {
+    return maskConnectionUrl(this.getMongoUrl());
   }
 }

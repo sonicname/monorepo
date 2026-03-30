@@ -27,6 +27,7 @@
     "@monorepo/constants": "workspace:*",
     "@monorepo/contracts": "workspace:*",
     "@monorepo/database": "workspace:*",
+    "@monorepo/mongodb": "workspace:*",
     "@monorepo/proto": "workspace:*",
     "@monorepo/queues": "workspace:*",
     "@monorepo/storage": "workspace:*",
@@ -35,6 +36,7 @@
     "@nestjs/config": "^4.0.3",
     "@nestjs/core": "^11.0.1",
     "@nestjs/microservices": "^11.0.1",
+    "@nestjs/mongoose": "^11.0.4",
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/schedule": "^6.1.1",
     "@nestjs/swagger": "^11.2.6",
@@ -45,6 +47,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "ioredis": "^5.9.3",
+    "mongoose": "^9.3.3",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
   },

@@ -14,6 +14,7 @@ const DEFAULT_AUTH_DATABASE_URL =
   'postgresql://postgres:postgres@127.0.0.1:5432/monorepo_auth';
 const DEFAULT_API_DATABASE_URL =
   'postgresql://postgres:postgres@127.0.0.1:5432/monorepo_api';
+const DEFAULT_MONGO_URL = 'mongodb://127.0.0.1:27017/monorepo';
 const DEFAULT_REDIS_URL = 'redis://127.0.0.1:6379';
 const DEFAULT_RABBITMQ_URL = 'amqp://guest:guest@127.0.0.1:5672';
 const DEFAULT_BULLMQ_PREFIX = 'monorepo';
@@ -42,11 +43,14 @@ export const RUNTIME_ENV_KEYS = [
   'BULLMQ_PREFIX',
   'AUTH_GRPC_PORT',
   'AUTH_GRPC_URL',
+  'MONGO_URL',
+  'MONGO_ENABLED',
 ] as const;
 
 const httpSchemes = ['http:', 'https:'];
 const databaseSchemes = ['postgres:', 'postgresql:'];
 const redisSchemes = ['redis:', 'rediss:'];
+const mongoSchemes = ['mongodb:', 'mongodb+srv:'];
 const rabbitMqSchemes = ['amqp:', 'amqps:'];
 const validatedEnvCache = new WeakMap<object, ValidatedRuntimeEnv>();
 
@@ -74,6 +78,12 @@ const rabbitMqUrlSchema = z
   .refine(
     (value) => rabbitMqSchemes.includes(new URL(value).protocol),
     'Must be a valid AMQP URL',
+  );
+const mongoUrlSchema = z
+  .string()
+  .refine(
+    (value) => mongoSchemes.some((s) => value.startsWith(s)),
+    'Must be a valid MongoDB URL',
   );
 const databaseUrlSchema = z
   .string()
@@ -116,6 +126,8 @@ export const runtimeEnvSchema = z
     BULLMQ_PREFIX: z.string().min(1).optional(),
     AUTH_GRPC_PORT: positivePortSchema.optional(),
     AUTH_GRPC_URL: z.string().min(1).optional(),
+    MONGO_URL: mongoUrlSchema.optional(),
+    MONGO_ENABLED: booleanFromEnvSchema.optional(),
   })
   .passthrough();
 
@@ -268,6 +280,18 @@ export function getAuthGrpcUrl(env: RuntimeEnv) {
   const validatedEnv = getValidatedRuntimeEnv(env);
 
   return validatedEnv.AUTH_GRPC_URL ?? DEFAULT_AUTH_GRPC_URL;
+}
+
+export function getMongoUrl(env: RuntimeEnv) {
+  const validatedEnv = getValidatedRuntimeEnv(env);
+
+  return validatedEnv.MONGO_URL ?? DEFAULT_MONGO_URL;
+}
+
+export function isMongoEnabled(env: RuntimeEnv) {
+  const validatedEnv = getValidatedRuntimeEnv(env);
+
+  return validatedEnv.MONGO_ENABLED ?? Boolean(env.MONGO_URL);
 }
 
 export function maskConnectionUrl(value: string) {

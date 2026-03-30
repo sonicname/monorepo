@@ -16,6 +16,7 @@ import { HealthModule } from './health/health.module';
 import { ThrottleModule } from './throttle/throttle.module';
 import { RuntimeConfigService } from './config/runtime-config.service';
 import { DatabaseModule } from './database/database.module';
+import { MongoModule } from './mongo/mongo.module';
 import { ProfileModule } from './profile/profile.module';
 import { ProjectsModule } from './projects/projects.module';
 import { RabbitMqModule } from './rabbitmq/rabbitmq.module';
@@ -34,6 +35,7 @@ const validateConfig = validateRuntimeEnv as unknown as (
     }),
     RuntimeConfigModule,
     DatabaseModule,
+    MongoModule,
     RabbitMqModule,
     BullModule.forRootAsync({
       inject: [RuntimeConfigService],
