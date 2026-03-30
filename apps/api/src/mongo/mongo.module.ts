@@ -15,17 +15,11 @@ import { RuntimeConfigService } from '../config/runtime-config.service.js';
       inject: [RuntimeConfigService],
       useFactory: (config: RuntimeConfigService) => {
         if (!config.isMongoEnabled()) {
-          Logger.log(
-            'MongoDB disabled — no MONGO_URL set',
-            'MongoModule',
-          );
+          Logger.log('MongoDB disabled — no MONGO_URL set', 'MongoModule');
           return {};
         }
 
-        Logger.log(
-          `MongoDB → ${config.getMaskedMongoUrl()}`,
-          'MongoModule',
-        );
+        Logger.log(`MongoDB → ${config.getMaskedMongoUrl()}`, 'MongoModule');
         return { uri: config.getMongoUrl() };
       },
     }),
