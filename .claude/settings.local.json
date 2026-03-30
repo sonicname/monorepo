@@ -52,7 +52,8 @@
       "Bash(npx tsc:*)",
       "Bash(pnpm --filter web build)",
       "Bash(grep -r \"routes\\\\|routing\" d:Codemonorepodocs*.md)",
-      "Bash(pnpm --filter api format)"
+      "Bash(pnpm --filter api format)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\({k:v for k,v in d.items\\(\\) if k in [''''scripts'''',''''jest'''',''''devDependencies'''']}, indent=2\\)\\)\")"
     ]
   }
 }
