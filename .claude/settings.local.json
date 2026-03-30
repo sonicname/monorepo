@@ -50,7 +50,8 @@
       "Bash(rmdir app/routes)",
       "Bash(npx react-router:*)",
       "Bash(npx tsc:*)",
-      "Bash(pnpm --filter web build)"
+      "Bash(pnpm --filter web build)",
+      "Bash(grep -r \"routes\\\\|routing\" d:Codemonorepodocs*.md)"
     ]
   }
 }
