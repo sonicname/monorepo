@@ -14,8 +14,8 @@ import type {
 } from '@monorepo/contracts';
 import { enqueueProjectsSync } from '@monorepo/queues/bullmq';
 import { Form, Link, useActionData, useNavigation } from 'react-router';
-import { getSessionUser } from '../lib/session.server';
-import type { Route } from './+types/home';
+import { getSessionUser } from '~/lib/session.server';
+import type { Route } from './+types/__homepage';
 
 function getApiBaseUrl() {
   return getApiOrigin(process.env);
@@ -171,7 +171,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                 Admin
               </Link>
             )}
-            <Form method='post' action='/logout'>
+            <Form method='post' action='/auth/logout'>
               <button type='submit' className='auth-link'>
                 Sign out
               </button>

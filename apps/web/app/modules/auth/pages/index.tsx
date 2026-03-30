@@ -1,6 +1,6 @@
 import { Form, Link, redirect, useActionData, useNavigation, useSearchParams } from 'react-router';
-import { commitSession, getSession } from '../lib/session.server';
-import type { Route } from './+types/auth';
+import { commitSession, getSession } from '~/lib/session.server';
+import type { Route } from './+types/index';
 
 const AUTH_SERVICE_URL =
   process.env['AUTH_SERVICE_URL'] ?? 'http://127.0.0.1:3002';

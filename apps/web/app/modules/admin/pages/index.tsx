@@ -1,5 +1,5 @@
-import { requireRole } from '../lib/session.server';
-import type { Route } from './+types/admin';
+import { requireRole } from '~/lib/session.server';
+import type { Route } from './+types/index';
 
 export async function loader({ request }: Route.LoaderArgs) {
   const user = await requireRole(request, 'admin');
