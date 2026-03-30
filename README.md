@@ -2,19 +2,20 @@
 
 PNPM workspace with a React Router v7 SSR frontend, a NestJS API, a NestJS auth microservice, and Traefik as the API gateway.
 
-| App / Package        | Description                                                                        |
-| -------------------- | ---------------------------------------------------------------------------------- |
-| `apps/web`           | React Router v7 framework app with server-side rendering                           |
-| `apps/auth`          | NestJS auth microservice — JWT (15m access + 30d refresh rotation), email verify, password reset, profile, audit trail |
-| `apps/api`           | NestJS API server — projects, profile (via gRPC), BullMQ, RabbitMQ                 |
-| `packages/cache`     | Redis cache helpers via ioredis (get, set, del, exists, expire, ttl)               |
-| `packages/config`    | Shared env/config helpers for ports, origins, and API paths                        |
-| `packages/constants` | Shared queue names, BullMQ/email defaults, and event constants                     |
-| `packages/contracts` | Shared TypeScript contracts consumed by both apps                                  |
-| `packages/database`  | Shared Drizzle ORM schema, client, and repositories                                |
-| `packages/email`     | Email transport (nodemailer) + Handlebars HTML templates                            |
-| `packages/proto`     | Shared Protobuf definitions and TypeScript interfaces for gRPC                     |
-| `packages/queues`    | Shared BullMQ and RabbitMQ helpers consumed by both apps                           |
+| App / Package | Description |
+| --- | --- |
+| `apps/web` | React Router v7 framework app with SSR, module-based file routing via `modules-page-routing` |
+| `apps/auth` | NestJS auth microservice — JWT (15m access + 30d refresh rotation), email verify, password reset, profile, audit trail |
+| `apps/api` | NestJS API server — projects, profile (via gRPC), BullMQ, RabbitMQ |
+| `packages/cache` | Redis cache helpers via ioredis (get, set, del, exists, expire, ttl) |
+| `packages/config` | Shared env/config helpers for ports, origins, and API paths |
+| `packages/constants` | Shared queue names, BullMQ/email defaults, and event constants |
+| `packages/contracts` | Shared TypeScript contracts consumed by both apps |
+| `packages/database` | Shared Drizzle ORM schema, client, and repositories |
+| `packages/email` | Email transport (nodemailer) + Handlebars HTML templates |
+| `packages/proto` | Shared Protobuf definitions and TypeScript interfaces for gRPC |
+| `packages/queues` | Shared BullMQ and RabbitMQ helpers consumed by both apps |
+| `packages/storage` | S3-compatible storage helpers (presigned URLs, upload, delete) via MinIO |
 
 ---
 
@@ -395,12 +396,43 @@ Default production ports:
 - Web: <http://localhost:3000>
 - API: <http://localhost:3001>
 
+## Testing
+
+```bash
+pnpm test            # run all unit tests (API + auth)
+pnpm test:api        # API tests only
+pnpm test:auth       # auth tests only
+pnpm test:e2e        # API e2e tests
+```
+
+64 unit tests across 8 suites covering guards, services, controllers, and cron jobs.
+
+## CI/CD
+
+GitHub Actions pipeline (`.github/workflows/ci.yml`) runs on push to `main`/`development` and all PRs:
+
+```text
+install → typecheck + format + test (parallel) → build
+```
+
+## Web Routes
+
+The web app uses module-based file routing via `modules-page-routing`:
+
+| Route | Module | Description |
+| --- | --- | --- |
+| `/` | `__homepage.tsx` | Dashboard with API status |
+| `/auth` | `auth/pages/index.tsx` | Sign in / register |
+| `/auth/logout` | `auth/pages/logout.tsx` | Sign out (action only) |
+| `/auth/forgot-password` | `auth/pages/forgot-password.tsx` | Request password reset |
+| `/auth/reset-password` | `auth/pages/reset-password.tsx` | Reset password via token |
+| `/auth/verify-email` | `auth/pages/verify-email.tsx` | Email verification via token |
+| `/profile` | `profile/pages/index.tsx` | View/edit user profile |
+| `/admin` | `admin/pages/index.tsx` | Admin panel (admin role) |
+
 ## Other Scripts
 
 ```bash
 pnpm typecheck
-pnpm lint
-pnpm test
-pnpm test:e2e
 pnpm format
 ```
