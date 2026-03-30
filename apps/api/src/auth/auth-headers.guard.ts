@@ -23,13 +23,19 @@ export class AuthHeadersGuard implements CanActivate {
     const userId = request.headers['x-user-id'] as string | undefined;
     const email = request.headers['x-user-email'] as string | undefined;
     const username = request.headers['x-user-username'] as string | undefined;
-    const role = (request.headers['x-user-role'] as string | undefined) ?? 'user';
+    const role =
+      (request.headers['x-user-role'] as string | undefined) ?? 'user';
 
     if (!userId || !email || !username) {
       throw new UnauthorizedException('Missing authentication headers');
     }
 
-    const user: AuthUser = { id: userId, email, username, role: role as UserRole };
+    const user: AuthUser = {
+      id: userId,
+      email,
+      username,
+      role: role as UserRole,
+    };
     request.user = user;
     return true;
   }

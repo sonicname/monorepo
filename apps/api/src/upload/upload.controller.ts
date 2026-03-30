@@ -29,14 +29,20 @@ class PresignedDownloadRequestDto {
 
 @ApiTags('Upload')
 @ApiBearerAuth()
-@ApiUnauthorizedResponse({ type: ApiErrorResponseDto, description: 'Invalid or missing JWT' })
+@ApiUnauthorizedResponse({
+  type: ApiErrorResponseDto,
+  description: 'Invalid or missing JWT',
+})
 @Controller('upload')
 export class UploadController {
   constructor(private readonly uploadService: UploadService) {}
 
   @ApiOperation({ summary: 'Get presigned URL for file upload' })
   @ApiOkResponse({ description: 'Presigned upload URL with key' })
-  @ApiBadRequestResponse({ type: ApiErrorResponseDto, description: 'Invalid content type' })
+  @ApiBadRequestResponse({
+    type: ApiErrorResponseDto,
+    description: 'Invalid content type',
+  })
   @Post('presign')
   async getUploadUrl(@Body() dto: PresignedUploadRequestDto) {
     try {

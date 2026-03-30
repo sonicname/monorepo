@@ -110,7 +110,9 @@ class QueueStatusData {
   @ApiProperty({ example: 'redis://***:6379' })
   redisUrl!: string;
 
-  @ApiProperty({ enum: ['disabled', 'starting', 'ready', 'processing', 'error'] })
+  @ApiProperty({
+    enum: ['disabled', 'starting', 'ready', 'processing', 'error'],
+  })
   workerStatus!: string;
 }
 

@@ -26,8 +26,8 @@ export class HttpExceptionEnvelopeFilter implements ExceptionFilter {
     const message =
       typeof exceptionResponse === 'string'
         ? exceptionResponse
-        : (exceptionResponse as { message?: string | string[] })?.message ??
-          'Internal server error';
+        : ((exceptionResponse as { message?: string | string[] })?.message ??
+          'Internal server error');
 
     const details =
       typeof exceptionResponse === 'object' && exceptionResponse !== null

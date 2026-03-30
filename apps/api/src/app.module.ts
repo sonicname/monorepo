@@ -1,6 +1,10 @@
 import { validateRuntimeEnv } from '@monorepo/config';
 import { BullModule } from '@nestjs/bullmq';
-import { type MiddlewareConsumer, Module, type NestModule } from '@nestjs/common';
+import {
+  type MiddlewareConsumer,
+  Module,
+  type NestModule,
+} from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { RequestIdMiddleware } from './common/request-id.middleware';

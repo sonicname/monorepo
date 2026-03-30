@@ -48,10 +48,7 @@ async function bootstrap() {
     .setTitle('API Service')
     .setDescription('Main API service — protected by Traefik forwardAuth')
     .setVersion('1.0')
-    .addApiKey(
-      { type: 'apiKey', name: 'X-User-Id', in: 'header' },
-      'X-User-Id',
-    )
+    .addApiKey({ type: 'apiKey', name: 'X-User-Id', in: 'header' }, 'X-User-Id')
     .build();
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('docs', app, document);

@@ -26,14 +26,20 @@ import { UpdateProfileDto } from './update-profile.dto';
 
 @ApiTags('Profile')
 @ApiBearerAuth()
-@ApiUnauthorizedResponse({ type: ApiErrorResponseDto, description: 'Invalid or missing JWT' })
+@ApiUnauthorizedResponse({
+  type: ApiErrorResponseDto,
+  description: 'Invalid or missing JWT',
+})
 @Controller('profile')
 export class ProfileController {
   constructor(private readonly authGrpcService: AuthGrpcService) {}
 
   @ApiOperation({ summary: 'Get current user profile' })
   @ApiOkResponse({ type: ApiProfileResponseDto, description: 'User profile' })
-  @ApiNotFoundResponse({ type: ApiErrorResponseDto, description: 'User not found' })
+  @ApiNotFoundResponse({
+    type: ApiErrorResponseDto,
+    description: 'User not found',
+  })
   @Get()
   async getProfile(@CurrentUser() user: AuthUser) {
     const response = await firstValueFrom(
@@ -57,8 +63,14 @@ export class ProfileController {
   }
 
   @ApiOperation({ summary: 'Update current user profile' })
-  @ApiOkResponse({ type: ApiProfileResponseDto, description: 'Profile updated' })
-  @ApiNotFoundResponse({ type: ApiErrorResponseDto, description: 'User not found' })
+  @ApiOkResponse({
+    type: ApiProfileResponseDto,
+    description: 'Profile updated',
+  })
+  @ApiNotFoundResponse({
+    type: ApiErrorResponseDto,
+    description: 'User not found',
+  })
   @Patch()
   async updateProfile(
     @CurrentUser() user: AuthUser,

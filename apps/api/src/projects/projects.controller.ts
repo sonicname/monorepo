@@ -25,7 +25,10 @@ export class ProjectsController {
   }
 
   @ApiOperation({ summary: 'Get BullMQ queue status' })
-  @ApiOkResponse({ type: ApiQueueStatusResponseDto, description: 'Queue status' })
+  @ApiOkResponse({
+    type: ApiQueueStatusResponseDto,
+    description: 'Queue status',
+  })
   @Get('queue')
   getQueueStatus() {
     return this.projectsQueueService.getStatus();
