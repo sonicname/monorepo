@@ -34,7 +34,23 @@
       "Read(//tmp/**)",
       "Bash(pnpm gen:package storage --dep @aws-sdk/client-s3@^3.750.0 --dep @aws-sdk/s3-request-presigner@^3.750.0)",
       "Bash(pnpm --filter auth add @monorepo/storage --workspace)",
-      "Bash(pnpm --filter api add @monorepo/storage --workspace)"
+      "Bash(pnpm --filter api add @monorepo/storage --workspace)",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebSearch",
+      "WebFetch(domain:npmjs.com)",
+      "Bash(npm view:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:registry.npmjs.org)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(pnpm --filter web add modules-page-routing)",
+      "Bash(mv routes/home.tsx modules/__homepage.tsx)",
+      "Bash(mv routes/auth.tsx modules/auth/pages/index.tsx)",
+      "Bash(mv routes/admin.tsx modules/admin/pages/index.tsx)",
+      "Bash(mv routes/logout.tsx modules/auth/pages/logout.tsx)",
+      "Bash(rmdir app/routes)",
+      "Bash(npx react-router:*)",
+      "Bash(npx tsc:*)",
+      "Bash(pnpm --filter web build)"
     ]
   }
 }
